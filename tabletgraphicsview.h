@@ -8,6 +8,7 @@
 #include <QEvent>
 #include <QTouchEvent>
 #include <QGraphicsPathItem>
+#include <qwebsocket.h>
 
 class TabletGraphicsView : public QGraphicsView
 {
@@ -18,15 +19,23 @@ public:
 
 private:
     void resizeEvent(QResizeEvent *event) override;
-    // return_type (*FuncPtr) (parameter type, ....);
     QPainterPath* currentPath;
     QGraphicsPathItem *currentPathItem;
-    // void (*newStrokeCallback)(QPainterPath*);
     void handleTouch(QPointF position, int id);
     void handleRelease(QPointF position, int id);
     void handleMove(QPointF position, int id);
     QGraphicsScene scene;
     QPen pen;
+
+Q_SIGNALS:
+    void closed();
+
+private Q_SLOTS:
+    void onConnected();
+    void onTextMessageReceived(QString message);
+
+private:
+    QWebSocket webSocket;
 
 protected:
     bool event(QEvent *event) override {

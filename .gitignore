@@ -1,0 +1,4 @@
+build
+external
+.vscode
+CMakeLists.txt.user
