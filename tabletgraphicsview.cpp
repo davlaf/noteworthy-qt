@@ -14,25 +14,31 @@ TabletGraphicsView::TabletGraphicsView(QWidget *parent): QGraphicsView(parent) {
     this->setSceneRect(0, 0, this->width()-5, this->height()-5);
 
     // websocket
-    qDebug() << "websocket??";
+    qDebug() << "websocket???";
     connect(&webSocket, &QWebSocket::connected, this, &TabletGraphicsView::onConnected);
     connect(&webSocket, &QWebSocket::disconnected, this, &TabletGraphicsView::closed);
+    connect(&webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred),
+            this, &TabletGraphicsView::onError);  // Handle WebSocket errors
     QWebSocketHandshakeOptions options;
     options.setSubprotocols({"echo-protocol"});
-    webSocket.open(QUrl("ws://127.0.0.1:8081/"), options);
+    webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
+    qDebug() << "v0.1";
 
     this->setScene(&scene);
     this->pen = QColor{255, 50, 50};
     this->show();
 }
 
+void TabletGraphicsView::onError(QAbstractSocket::SocketError error) {
+    qDebug() << "WebSocket error occurred:" << webSocket.errorString();
+    qDebug() << "Error code:" << error;
+}
+
 void TabletGraphicsView::handleTouch(QPointF position, int id)
 {
-    // qDebug() << "Touch pressed at:" << position << "with ID:" << id;
+    qDebug() << "Touch pressed at:" << position << "with ID:" << id;
     // only care about 1 touch
-    if (id != 0) {
-        return;
-    }
+    currentId = id;
     QPointF scenePos = this->mapToScene(position.toPoint());
     currentPath = new QPainterPath(scenePos);
     currentPathItem = this->scene.addPath(*currentPath, pen);
@@ -40,9 +46,9 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
 
 void TabletGraphicsView::handleMove(QPointF position, int id)
 {
-    // qDebug() << "Touch moved to:" << position << "with ID:" << id;
+    qDebug() << "Touch moved to:" << position << "with ID:" << id;
     // only care about 1 touch
-    if (id != 0) {
+    if (id != currentId) {
         return;
     }
 
@@ -59,9 +65,9 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
 void TabletGraphicsView::handleRelease(QPointF position, int id)
 {
 
-    // qDebug() << "Touch released at:" << position << "with ID:" << id;
+    qDebug() << "Touch released at:" << position << "with ID:" << id;
     // only care about 1 touch
-    if (id != 0) {
+    if (id != currentId) {
         return;
     }
 

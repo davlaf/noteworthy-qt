@@ -19,11 +19,13 @@ public:
 
 private:
     void resizeEvent(QResizeEvent *event) override;
+    int currentId;
     QPainterPath* currentPath;
     QGraphicsPathItem *currentPathItem;
     void handleTouch(QPointF position, int id);
     void handleRelease(QPointF position, int id);
     void handleMove(QPointF position, int id);
+    void onError(QAbstractSocket::SocketError error);
     QGraphicsScene scene;
     QPen pen;
 
