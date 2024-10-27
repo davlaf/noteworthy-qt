@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(noteworthy-qt VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -g")
+
 add_definitions(-DNOTEWORTHY_QT)
 
 set(CMAKE_AUTOUIC ON)
@@ -41,7 +43,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         tabletgraphicsview.h tabletgraphicsview.cpp
         Stroke.hpp
-
+        RoomState.hpp RoomState.cpp
+        RandomIdGenerator.hpp RandomIdGenerator.cpp
+        ClientWebSocketHandler.hpp ClientWebSocketHandler.cpp
+        CanvasObject.hpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET noteworthy-qt APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

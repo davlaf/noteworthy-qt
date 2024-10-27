@@ -1,6 +1,9 @@
 #ifndef TABLETGRAPHICSVIEW_H
 #define TABLETGRAPHICSVIEW_H
 
+#include "ClientWebSocketHandler.hpp"
+#include "RoomState.hpp"
+#include "Stroke.hpp"
 #include <QGraphicsView>
 #include <QWidget>
 #include <qgraphicsscene.h>
@@ -15,43 +18,40 @@ class TabletGraphicsView : public QGraphicsView
     Q_OBJECT
 public:
     TabletGraphicsView(QWidget *parent = nullptr);
-    // void setNewStrokeCallback( void (*newStrokeCallback)(QPainterPath*) );
 
 private:
     void resizeEvent(QResizeEvent *event) override;
-    int currentId;
-    QPainterPath* currentPath;
-    QGraphicsPathItem *currentPathItem;
+    int currentTouchId;
     void handleTouch(QPointF position, int id);
     void handleRelease(QPointF position, int id);
     void handleMove(QPointF position, int id);
-    void onError(QAbstractSocket::SocketError error);
     QGraphicsScene scene;
     QPen pen;
 
-Q_SIGNALS:
-    void closed();
+    ClientWebSocketHandler web_socket_handler;
+    std::unique_ptr<Stroke> current_stroke;
+    uint64_t current_stroke_id;
 
-private Q_SLOTS:
-    void onConnected();
-    void onTextMessageReceived(QString message);
-
-private:
-    QWebSocket webSocket;
+    // TODO: make it not hard coded
+    uint64_t selected_page_id = 12345;
 
 protected:
-    bool event(QEvent *event) override {
+    bool event(QEvent *event) override
+    {
         if (event->type() == QEvent::TouchBegin ||
             event->type() == QEvent::TouchUpdate ||
-            event->type() == QEvent::TouchEnd) {
+            event->type() == QEvent::TouchEnd)
+        {
 
             QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
 
-            for (const QTouchEvent::TouchPoint &point : touchEvent->points()) {
-                int id = point.id();  // ID of the touch point
-                QPointF pos = point.position();  // Current position of the touch point
+            for (const QTouchEvent::TouchPoint &point : touchEvent->points())
+            {
+                int id = point.id();            // ID of the touch point
+                QPointF pos = point.position(); // Current position of the touch point
                 Qt::TouchPointState pointState = static_cast<Qt::TouchPointState>(point.state());
-                switch (pointState) {
+                switch (pointState)
+                {
                 case Qt::TouchPointPressed:
                     handleTouch(pos, id);
                     break;
@@ -65,9 +65,9 @@ protected:
                     break;
                 }
             }
-            return true;  // Event has been handled
+            return true; // Event has been handled
         }
-        return QGraphicsView::event(event);  // Pass the event to the base class if not handled
+        return QGraphicsView::event(event); // Pass the event to the base class if not handled
     }
 };
 

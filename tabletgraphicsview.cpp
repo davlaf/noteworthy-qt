@@ -1,4 +1,5 @@
 #include "tabletgraphicsview.h"
+#include "RoomState.hpp"
 #include <QWebSocketHandshakeOptions>
 
 #include "nlohmann/json.hpp"
@@ -6,22 +7,13 @@
 
 using json = nlohmann::json; // Define a shorthand for the json type
 
-TabletGraphicsView::TabletGraphicsView(QWidget *parent): QGraphicsView(parent) {
-    setAttribute(Qt::WA_AcceptTouchEvents);  // Enable touch events
+TabletGraphicsView::TabletGraphicsView(QWidget *parent) : QGraphicsView(parent)
+{
+    setAttribute(Qt::WA_AcceptTouchEvents); // Enable touch events
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     // i dont know why I have to subtract 5
-    this->setSceneRect(0, 0, this->width()-5, this->height()-5);
-
-    // websocket
-    qDebug() << "websocket???";
-    connect(&webSocket, &QWebSocket::connected, this, &TabletGraphicsView::onConnected);
-    connect(&webSocket, &QWebSocket::disconnected, this, &TabletGraphicsView::closed);
-    connect(&webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred),
-            this, &TabletGraphicsView::onError);  // Handle WebSocket errors
-    QWebSocketHandshakeOptions options;
-    options.setSubprotocols({"echo-protocol"});
-    webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
+    this->setSceneRect(0, 0, this->width() - 5, this->height() - 5);
     qDebug() << "v0.1";
 
     this->setScene(&scene);
@@ -29,37 +21,53 @@ TabletGraphicsView::TabletGraphicsView(QWidget *parent): QGraphicsView(parent) {
     this->show();
 }
 
-void TabletGraphicsView::onError(QAbstractSocket::SocketError error) {
-    qDebug() << "WebSocket error occurred:" << webSocket.errorString();
-    qDebug() << "Error code:" << error;
-}
-
 void TabletGraphicsView::handleTouch(QPointF position, int id)
 {
     qDebug() << "Touch pressed at:" << position << "with ID:" << id;
     // only care about 1 touch
-    currentId = id;
+    currentTouchId = id;
     QPointF scenePos = this->mapToScene(position.toPoint());
-    currentPath = new QPainterPath(scenePos);
-    currentPathItem = this->scene.addPath(*currentPath, pen);
+
+    // Initialize current_path with a new QPainterPath
+    auto current_path = std::make_unique<QPainterPath>(scenePos);
+
+    // Create a Stroke using the current_path
+    current_stroke = std::make_unique<Stroke>(std::move(current_path));
+    current_stroke->room_id = state.room_id;
+    current_stroke->page_id = selected_page_id;
+    current_stroke->id = IDGenerator::newID();
+
+    nlohmann::json event;
+    current_stroke->createCreateEvent(event);
+    web_socket_handler.sendEvent(event);
+    web_socket_handler.handleEvent(event);
 }
 
 void TabletGraphicsView::handleMove(QPointF position, int id)
 {
     qDebug() << "Touch moved to:" << position << "with ID:" << id;
     // only care about 1 touch
-    if (id != currentId) {
+    if (id != currentTouchId)
+    {
         return;
     }
 
-    QPointF scenePos = this->mapToScene(position.toPoint());
+    QPointF scene_pos = this->mapToScene(position.toPoint());
 
-    if (currentPath && currentPathItem) {
-        // Modify the existing path
-        currentPath->lineTo(scenePos);  // Extend the path to the new point
-        currentPathItem->setPath(*currentPath);  // Update the QGraphicsPathItem
+    if (!current_stroke)
+    {
+        qDebug("fake!!!! move before new touch");
+        return;
     }
-    // this->scene.removeItem(graphicsPathItem);
+
+    current_stroke->path->lineTo(scene_pos);          // Extend the path to the new point
+    nlohmann::json event_json;
+    current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
+    current_stroke->applyAppendEvent(event_json);
+
+    std::string event_string = event_json.dump();
+    web_socket_handler.sendEvent(event_json);
+    web_socket_handler.handleEvent(event_json);
 }
 
 void TabletGraphicsView::handleRelease(QPointF position, int id)
@@ -67,71 +75,36 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
 
     qDebug() << "Touch released at:" << position << "with ID:" << id;
     // only care about 1 touch
-    if (id != currentId) {
+    if (id != currentTouchId)
+    {
         return;
     }
 
-    QPointF scenePos = this->mapToScene(position.toPoint());
+    QPointF scene_pos = this->mapToScene(position.toPoint());
 
-    if (currentPath && currentPathItem) {
-        // Finalize the path upon release
-        currentPath->lineTo(scenePos);  // Ensure the path ends at the final touch point
-        Stroke finalStroke;
-        finalStroke.fromQPainterPath(*currentPath);
-        json pointJson;
-        finalStroke.to_json(pointJson, finalStroke);
-        const int NEW_STROKE = 0;
-        pointJson["type"] = NEW_STROKE;
-
-        QString json_string = QString::fromStdString(pointJson.dump());
-        webSocket.sendTextMessage(json_string);
-        qDebug() << json_string;
-
-        currentPathItem->setPath(*currentPath);  // Update the QGraphicsPathItem
-        currentPath = nullptr;  // Reset the path for the next touch
-        currentPathItem = nullptr;  // Reset the item for the next touch
-
-
+    if (!(current_stroke))
+    {
+        qDebug() << "what?? release when there the stroke is null";
+        return;
     }
+
+    current_stroke->path->lineTo(scene_pos);          // Extend the path to the new point
+    nlohmann::json event_json;
+    current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
+    current_stroke->applyAppendEvent(event_json);
+
+    web_socket_handler.sendEvent(event_json);
+    web_socket_handler.handleEvent(event_json);
+
+    current_stroke = nullptr;
+    current_stroke_id = 0;
 }
 
-//! [onConnected]
-void TabletGraphicsView::onConnected()
+
+
+void TabletGraphicsView::resizeEvent(QResizeEvent *event)
 {
-    qDebug() << "WebSocket connected";
-    connect(&webSocket, &QWebSocket::textMessageReceived,
-            this, &TabletGraphicsView::onTextMessageReceived);
-    // webSocket.sendTextMessage(QStringLiteral("Hello, world!"));
-}
-//! [onConnected]
-
-//! [onTextMessageReceived]
-void TabletGraphicsView::onTextMessageReceived(QString message)
-{
-    qDebug() << "Message received:" << message;
-    // Convert QString to std::string
-    std::string stdMessage = message.toStdString();
-
-    try {
-        // Parse the std::string into a nlohmann::json object
-        nlohmann::json event_map = nlohmann::json::parse(stdMessage);
-
-        Stroke stroke;
-        stroke.from_json(event_map, stroke);
-
-        QPainterPath* newPath = stroke.toQPainterPath();
-
-        this->scene.addPath(*newPath, pen);
-        // qDebug() << "Parsed JSON:" << QString::fromStdString(event_map.dump());
-
-    } catch (nlohmann::json::parse_error& e) {
-        qDebug() << "JSON parse error:" << e.what();
-    }
-}
-//! [onTextMessageReceived]
-
-void TabletGraphicsView::resizeEvent(QResizeEvent *event) {
     // Update the scene rectangle to match the new size of the view
     QGraphicsView::resizeEvent(event); // Call the base class implementation (optional if you don't want any default behavior)
-    this->setSceneRect(0, 0, this->width()-5, this->height()-5);
+    this->setSceneRect(0, 0, this->width() - 5, this->height() - 5);
 }
