@@ -9,7 +9,7 @@ public:
     std::string owner_id;
     std::string room_id;
     uint64_t page_id;
-    uint64_t id;
+    uint64_t object_id;
 
     virtual ~CanvasObject() = default;
 
@@ -29,7 +29,8 @@ public:
     // without hard coding object type strings in code
     // that depends on the type field
     // so I think this the least worst solution
-    enum ObjectType {
+    enum ObjectType
+    {
         STROKE,
         SYMBOL,
         SHAPE,
@@ -48,7 +49,7 @@ public:
         json["room_id"] = room_id;
         json["page_id"] = page_id;
         json["object_type"] = getObjectType();
-        json["object_id"] = id;
+        json["object_id"] = object_id;
     };
 
     void retrieveMetaInformation(const nlohmann::json &json)
@@ -56,21 +57,24 @@ public:
         json.at("owner_id").get_to(owner_id);
         json.at("room_id").get_to(room_id);
         json.at("page_id").get_to(page_id);
-        json.at("object_id").get_to(id);
+        json.at("object_id").get_to(object_id);
     };
 
     // function that gets called after a change gets applied
     // only needs to be implemented for qt side
-    virtual void updateQtScene() {
+    virtual void updateQtScene()
+    {
         qDebug() << "parent??";
     };
 
-    void createCreateEvent(nlohmann::json &json) {
+    void createCreateEvent(nlohmann::json &json)
+    {
         toJson(json);
         json["event_type"] = CREATE;
     }
 
-    void createDeleteEvent(nlohmann::json &json) {
+    void createDeleteEvent(nlohmann::json &json)
+    {
         addMetaInformation(json);
         json["event_type"] = DELETE;
     }
