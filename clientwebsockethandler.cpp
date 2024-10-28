@@ -3,10 +3,11 @@
 
 #include "Stroke.hpp"
 #include "nlohmann/json.hpp"
+#include <qgraphicsitem.h>
 #include <qwebsockethandshakeoptions.h>
 
-ClientWebSocketHandler::ClientWebSocketHandler(QObject *parent)
-    : QObject{parent}
+ClientWebSocketHandler::ClientWebSocketHandler(std::shared_ptr<QGraphicsScene> scene, QObject *parent)
+    : QObject{parent}, scene{scene}
 {
     connect(&webSocket, &QWebSocket::connected, this, &ClientWebSocketHandler::onConnected);
     connect(&webSocket, &QWebSocket::disconnected, this, &ClientWebSocketHandler::closed);
@@ -14,8 +15,8 @@ ClientWebSocketHandler::ClientWebSocketHandler(QObject *parent)
             this, &ClientWebSocketHandler::onError); // Handle WebSocket errors
     QWebSocketHandshakeOptions options;
     options.setSubprotocols({"echo-protocol"});
-    // webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
-    webSocket.open(QUrl("ws://localhost:8081/"), options);
+    webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
+    // webSocket.open(QUrl("ws://localhost:8081/"), options);
 }
 
 void ClientWebSocketHandler::onConnected()
@@ -33,22 +34,24 @@ void ClientWebSocketHandler::onError(QAbstractSocket::SocketError error)
 
 void ClientWebSocketHandler::onTextMessageReceived(QString message) {
     nlohmann::json event = nlohmann::json::parse(message.toStdString());
-    handleEvent(message.toStdString());
+    handleEvent(event);
 }
 
 void ClientWebSocketHandler::sendEvent(const nlohmann::json& event) {
     webSocket.sendTextMessage(QString::fromStdString(event.dump()));
 }
 
-std::unique_ptr<CanvasObject> createObject(CanvasObject::ObjectType object_type) {
+std::unique_ptr<CanvasObject> ClientWebSocketHandler::createObject(CanvasObject::ObjectType object_type) {
     switch (object_type) {
     case CanvasObject::STROKE: {
         // Initialize current_path with a new QPainterPath
 
-        auto path = std::make_unique<QPainterPath>();
-
+        auto path = QPainterPath();
+        qDebug() << "addedPath: " << path;
+        QGraphicsPathItem* item = scene->addPath(path, QColor{255, 50, 50});
         // Create a Stroke using the current_path
-        auto stroke = std::make_unique<Stroke>(std::move(path));
+        auto stroke = std::make_unique<Stroke>(path, item);
+        qDebug() << "created object:" << stroke.get();
         return std::move(stroke);
     }
     case CanvasObject::SYMBOL:
@@ -76,7 +79,7 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json& event) {
     auto event_type = static_cast<CanvasObject::EventType>(event["event_type"]);
     switch(event_type) {
     case CanvasObject::CREATE: {
-        state.manipulatePage(event["page_id"], [event](Page& page) mutable {
+        state.manipulatePage(event["page_id"], [this, event](Page& page) mutable {
             auto object_type = static_cast<CanvasObject::ObjectType>(event["object_type"]);
 
             std::unique_ptr<CanvasObject> object = createObject(object_type);

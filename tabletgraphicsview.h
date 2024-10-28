@@ -25,7 +25,7 @@ private:
     void handleTouch(QPointF position, int id);
     void handleRelease(QPointF position, int id);
     void handleMove(QPointF position, int id);
-    QGraphicsScene scene;
+    std::shared_ptr<QGraphicsScene> scene = std::make_shared<QGraphicsScene>();
     QPen pen;
 
     ClientWebSocketHandler web_socket_handler;

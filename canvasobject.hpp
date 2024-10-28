@@ -1,5 +1,7 @@
 #pragma once
 #include "nlohmann/json.hpp"
+#include <qdebug.h>
+#include <qlogging.h>
 
 class CanvasObject
 {
@@ -59,7 +61,9 @@ public:
 
     // function that gets called after a change gets applied
     // only needs to be implemented for qt side
-    virtual void updateQtScene() {};
+    virtual void updateQtScene() {
+        qDebug() << "parent??";
+    };
 
     void createCreateEvent(nlohmann::json &json) {
         toJson(json);

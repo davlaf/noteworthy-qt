@@ -7,7 +7,7 @@
 
 using json = nlohmann::json; // Define a shorthand for the json type
 
-TabletGraphicsView::TabletGraphicsView(QWidget *parent) : QGraphicsView(parent)
+TabletGraphicsView::TabletGraphicsView(QWidget *parent) : QGraphicsView(parent), web_socket_handler(scene)
 {
     setAttribute(Qt::WA_AcceptTouchEvents); // Enable touch events
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -16,7 +16,7 @@ TabletGraphicsView::TabletGraphicsView(QWidget *parent) : QGraphicsView(parent)
     this->setSceneRect(0, 0, this->width() - 5, this->height() - 5);
     qDebug() << "v0.1";
 
-    this->setScene(&scene);
+    this->setScene(scene.get());
     this->pen = QColor{255, 50, 50};
     this->show();
 }
@@ -29,10 +29,10 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
     QPointF scenePos = this->mapToScene(position.toPoint());
 
     // Initialize current_path with a new QPainterPath
-    auto current_path = std::make_unique<QPainterPath>(scenePos);
+    auto current_path = QPainterPath(scenePos);
 
     // Create a Stroke using the current_path
-    current_stroke = std::make_unique<Stroke>(std::move(current_path));
+    current_stroke = std::make_unique<Stroke>(current_path);
     current_stroke->room_id = state.room_id;
     current_stroke->page_id = selected_page_id;
     current_stroke->id = IDGenerator::newID();
@@ -60,7 +60,7 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
         return;
     }
 
-    current_stroke->path->lineTo(scene_pos);          // Extend the path to the new point
+    current_stroke->path.lineTo(scene_pos);          // Extend the path to the new point
     nlohmann::json event_json;
     current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
     current_stroke->applyAppendEvent(event_json);
@@ -88,7 +88,7 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
         return;
     }
 
-    current_stroke->path->lineTo(scene_pos);          // Extend the path to the new point
+    current_stroke->path.lineTo(scene_pos);          // Extend the path to the new point
     nlohmann::json event_json;
     current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
     current_stroke->applyAppendEvent(event_json);

@@ -1,4 +1,4 @@
-# Use a base image like Nginx to serve the web content
+# docker build . -t davlaf/noteworthy-qt:latest
 FROM nginx:alpine
 
 # Set a working directory (inside the Docker container)
