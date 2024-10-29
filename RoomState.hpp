@@ -24,7 +24,7 @@ public:
     void addObject(std::unique_ptr<CanvasObject> object)
     {
         std::lock_guard<std::mutex> lock(page_mutex);
-        object_map[object.get()->id] = std::move(object);
+        object_map[object.get()->object_id] = std::move(object);
     }
 
     void manipulateObject(uint64_t id, const std::function<void(CanvasObject &)> &manipulator)

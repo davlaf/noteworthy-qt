@@ -35,7 +35,7 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
     current_stroke = std::make_unique<Stroke>(current_path);
     current_stroke->room_id = state.room_id;
     current_stroke->page_id = selected_page_id;
-    current_stroke->id = IDGenerator::newID();
+    current_stroke->object_id = IDGenerator::newID();
 
     nlohmann::json event;
     current_stroke->createCreateEvent(event);
@@ -60,7 +60,7 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
         return;
     }
 
-    current_stroke->path.lineTo(scene_pos);          // Extend the path to the new point
+    current_stroke->path.lineTo(scene_pos); // Extend the path to the new point
     nlohmann::json event_json;
     current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
     current_stroke->applyAppendEvent(event_json);
@@ -88,7 +88,7 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
         return;
     }
 
-    current_stroke->path.lineTo(scene_pos);          // Extend the path to the new point
+    current_stroke->path.lineTo(scene_pos); // Extend the path to the new point
     nlohmann::json event_json;
     current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
     current_stroke->applyAppendEvent(event_json);
@@ -99,8 +99,6 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
     current_stroke = nullptr;
     current_stroke_id = 0;
 }
-
-
 
 void TabletGraphicsView::resizeEvent(QResizeEvent *event)
 {

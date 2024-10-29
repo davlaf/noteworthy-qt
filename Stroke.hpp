@@ -17,7 +17,7 @@ private:
 #ifdef NOTEWORTHY_QT
 public:
     QPainterPath path;
-    QGraphicsPathItem* path_item;
+    QGraphicsPathItem *path_item;
 #endif
 
 public:
@@ -48,7 +48,7 @@ public:
     }
 
     virtual void applyScaleEvent(double scale_center_x, double scale_center_y,
-                          double scale_factor_x, double scale_factor_y)
+                                 double scale_factor_x, double scale_factor_y)
     {
         for (auto &point : points)
         {
@@ -70,7 +70,7 @@ private:
 
 public:
     virtual void applyRotateEvent(double rotation_center_x, double rotation_center_y,
-                           double rotation_degrees)
+                                  double rotation_degrees)
     {
         for (auto &point : points)
         {
@@ -80,7 +80,7 @@ public:
     }
 
     virtual void createAppendEvent(nlohmann::json &json,
-                            std::vector<std::vector<double>> new_points)
+                                   std::vector<std::vector<double>> new_points)
     {
         addMetaInformation(json);
         json["event_type"] = APPEND;
@@ -97,11 +97,12 @@ public:
     }
 
 #ifdef NOTEWORTHY_QT
-    Stroke(QPainterPath& path, QGraphicsPathItem* path_item) : path(path), path_item(path_item) {};
+    Stroke(QPainterPath &path, QGraphicsPathItem *path_item) : path(path), path_item(path_item) {};
 
-    Stroke(QPainterPath& path) : path(path) {};
+    Stroke(QPainterPath &path) : path(path) {};
 
-    Stroke() {
+    Stroke()
+    {
         qDebug("Created empty stroke??? (a copy happened) (bad)");
     };
 
@@ -110,7 +111,8 @@ public:
         // free(path); ??
     }
 
-    void updateQtPath() {
+    void updateQtPath()
+    {
         path.clear();
         std::vector<double> starting_vector = points.at(0);
         QPointF starting_point{starting_vector.at(0), starting_vector.at(1)};
@@ -127,7 +129,8 @@ public:
     {
         updateQtPath();
         // it its a placeholder for a stroke in progress
-        if (path_item == nullptr) {
+        if (path_item == nullptr)
+        {
             return;
         }
         path_item->setPath(path);

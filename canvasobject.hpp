@@ -125,25 +125,11 @@ public:
         throw std::logic_error("Applying rotate not implemented.");
     }
 
-protected:
-    virtual void onCreateAppendEvent(nlohmann::json &json)
-    {
-        throw std::logic_error("Creating append not implemented.");
-    }
-
-public:
     virtual void applyAppendEvent(const nlohmann::json &change)
     {
         throw std::logic_error("Applying append not implemented.");
     }
 
-protected:
-    virtual void onCreateEditEvent(nlohmann::json &json)
-    {
-        throw std::logic_error("Creating edit not implemented.");
-    }
-
-public:
     virtual void applyEditEvent(const nlohmann::json &change)
     {
         throw std::logic_error("Applying edit not implemented.");
