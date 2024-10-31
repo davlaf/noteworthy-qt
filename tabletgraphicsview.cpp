@@ -31,16 +31,69 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
     // Initialize current_path with a new QPainterPath
     auto current_path = QPainterPath(scenePos);
 
-    // Create a Stroke using the current_path
-    current_stroke = std::make_unique<Stroke>(current_path);
-    current_stroke->room_id = state.room_id;
-    current_stroke->page_id = selected_page_id;
-    current_stroke->object_id = IDGenerator::newID();
+    switch(current_transform){
+        case(CanvasObject::CREATE):
+        {
+            switch(current_object){
+                case(CanvasObject::STROKE):
+                {
+                    // Create a Stroke using the current_path
+                    current_stroke = std::make_unique<Stroke>(current_path);
+                    current_stroke->room_id = state.room_id;
+                    current_stroke->page_id = selected_page_id;
+                    current_stroke->object_id = IDGenerator::newID();
 
-    nlohmann::json event;
-    current_stroke->createCreateEvent(event);
-    web_socket_handler.sendEvent(event);
-    web_socket_handler.handleEvent(event);
+                    nlohmann::json event;
+                    current_stroke->createCreateEvent(event);
+                    web_socket_handler.sendEvent(event);
+                    web_socket_handler.handleEvent(event);
+                }
+                case(CanvasObject::SHAPE):
+                {
+
+                }
+                case(CanvasObject::TEXT):
+                {
+
+                }
+                case(CanvasObject::SYMBOL):
+                {
+
+                }
+                case(CanvasObject::BACKGROUND_IMAGE):
+                {
+
+                }
+                default:{
+
+                }
+            }
+        }
+        case CanvasObject::DELETE:
+        {
+
+        }
+        case CanvasObject::MOVE:
+        {
+
+        }
+        case CanvasObject::SCALE:
+        {
+
+        }
+        case CanvasObject::ROTATE:
+        {
+
+        }
+        case CanvasObject::APPEND:
+        {
+
+        }
+        case CanvasObject::EDIT:
+        {
+
+        }
+    }
 }
 
 void TabletGraphicsView::handleMove(QPointF position, int id)
