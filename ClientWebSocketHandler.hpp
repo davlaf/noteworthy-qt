@@ -6,14 +6,18 @@
 #include <qgraphicsscene.h>
 #include <qwebsocket.h>
 
+
+
 class ClientWebSocketHandler : public QObject
 {
     Q_OBJECT
 public:
-    explicit ClientWebSocketHandler(std::shared_ptr<QGraphicsScene> scene, QObject *parent = nullptr);
+    explicit ClientWebSocketHandler(QObject *parent = nullptr);
     void handleEvent(const nlohmann::json& event);
     void sendEvent(const nlohmann::json& event);
-    std::unique_ptr<CanvasObject> createObject(CanvasObject::ObjectType object_type);
+    void openConnection();
+
+    std::unique_ptr<CanvasObject> createCanvasObject(EventObjectType object_type, QGraphicsScene& scene, QColor color = QColor{255, 50, 50});
 
 signals:
     void closed();
@@ -25,5 +29,4 @@ private Q_SLOTS:
 
 private:
     QWebSocket webSocket;
-    std::shared_ptr<QGraphicsScene> scene;
 };

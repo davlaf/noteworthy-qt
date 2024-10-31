@@ -1,29 +1,20 @@
-#include "tabletgraphicsview.h"
+#include "tabletgraphicsview.hpp"
 #include "RoomState.hpp"
 #include <QWebSocketHandshakeOptions>
 
-#include "nlohmann/json.hpp"
 #include "Stroke.hpp"
 
 using json = nlohmann::json; // Define a shorthand for the json type
 
-TabletGraphicsView::TabletGraphicsView(QWidget *parent) : QGraphicsView(parent), web_socket_handler(scene)
-{
-    setAttribute(Qt::WA_AcceptTouchEvents); // Enable touch events
-    this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    // i dont know why I have to subtract 5
-    this->setSceneRect(0, 0, this->width() - 5, this->height() - 5);
-    qDebug() << "v0.1";
-
-    this->setScene(scene.get());
-    this->pen = QColor{255, 50, 50};
-    this->show();
-}
-
 void TabletGraphicsView::handleTouch(QPointF position, int id)
 {
     qDebug() << "Touch pressed at:" << position << "with ID:" << id;
+
+    // ignore touches if not on a page
+    if (current_page_id == 0)
+    {
+        return;
+    }
     // only care about 1 touch
     currentTouchId = id;
     QPointF scenePos = this->mapToScene(position.toPoint());
@@ -34,13 +25,16 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
     // Create a Stroke using the current_path
     current_stroke = std::make_unique<Stroke>(current_path);
     current_stroke->room_id = state.room_id;
-    current_stroke->page_id = selected_page_id;
+    current_stroke->page_id = current_page_id;
+    current_stroke->owner_id = user_id;
     current_stroke->object_id = IDGenerator::newID();
 
     nlohmann::json event;
     current_stroke->createCreateEvent(event);
-    web_socket_handler.sendEvent(event);
-    web_socket_handler.handleEvent(event);
+
+    std::string event_string = event.dump();
+    ws_handler->handleEvent(event);
+    ws_handler->sendEvent(event);
 }
 
 void TabletGraphicsView::handleMove(QPointF position, int id)
@@ -66,8 +60,8 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
     current_stroke->applyAppendEvent(event_json);
 
     std::string event_string = event_json.dump();
-    web_socket_handler.sendEvent(event_json);
-    web_socket_handler.handleEvent(event_json);
+    ws_handler->sendEvent(event_json);
+    ws_handler->handleEvent(event_json);
 }
 
 void TabletGraphicsView::handleRelease(QPointF position, int id)
@@ -93,8 +87,8 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
     current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
     current_stroke->applyAppendEvent(event_json);
 
-    web_socket_handler.sendEvent(event_json);
-    web_socket_handler.handleEvent(event_json);
+    ws_handler->sendEvent(event_json);
+    ws_handler->handleEvent(event_json);
 
     current_stroke = nullptr;
     current_stroke_id = 0;

@@ -2,21 +2,24 @@
 #include "RoomState.hpp"
 
 #include "Stroke.hpp"
-#include "nlohmann/json.hpp"
 #include <qgraphicsitem.h>
 #include <qwebsockethandshakeoptions.h>
 
-ClientWebSocketHandler::ClientWebSocketHandler(std::shared_ptr<QGraphicsScene> scene, QObject *parent)
-    : QObject{parent}, scene{scene}
+ClientWebSocketHandler::ClientWebSocketHandler(QObject *parent)
+    : QObject{parent}
 {
     connect(&webSocket, &QWebSocket::connected, this, &ClientWebSocketHandler::onConnected);
     connect(&webSocket, &QWebSocket::disconnected, this, &ClientWebSocketHandler::closed);
     connect(&webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred),
             this, &ClientWebSocketHandler::onError); // Handle WebSocket errors
+}
+
+void ClientWebSocketHandler::openConnection()
+{
     QWebSocketHandshakeOptions options;
     options.setSubprotocols({"echo-protocol"});
-    webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
-    // webSocket.open(QUrl("ws://localhost:8081/"), options);
+    // webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
+    webSocket.open(QUrl("ws://localhost:8081/"), options);
 }
 
 void ClientWebSocketHandler::onConnected()
@@ -32,38 +35,43 @@ void ClientWebSocketHandler::onError(QAbstractSocket::SocketError error)
     qDebug() << "Error code:" << error;
 }
 
-void ClientWebSocketHandler::onTextMessageReceived(QString message) {
+void ClientWebSocketHandler::onTextMessageReceived(QString message)
+{
     nlohmann::json event = nlohmann::json::parse(message.toStdString());
     handleEvent(event);
 }
 
-void ClientWebSocketHandler::sendEvent(const nlohmann::json& event) {
+void ClientWebSocketHandler::sendEvent(const nlohmann::json &event)
+{
     webSocket.sendTextMessage(QString::fromStdString(event.dump()));
 }
 
-std::unique_ptr<CanvasObject> ClientWebSocketHandler::createObject(CanvasObject::ObjectType object_type) {
-    switch (object_type) {
-    case CanvasObject::STROKE: {
+std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventObjectType object_type, QGraphicsScene &scene, QColor color)
+{
+    switch (object_type)
+    {
+    case STROKE:
+    {
         // Initialize current_path with a new QPainterPath
 
         auto path = QPainterPath();
         qDebug() << "addedPath: " << path;
-        QGraphicsPathItem* item = scene->addPath(path, QColor{255, 50, 50});
+        QGraphicsPathItem *item = scene.addPath(path, color);
         // Create a Stroke using the current_path
         auto stroke = std::make_unique<Stroke>(path, item);
         qDebug() << "created object:" << stroke.get();
         return std::move(stroke);
     }
-    case CanvasObject::SYMBOL:
+    case SYMBOL:
         qDebug() << "Symbol creation not supported.";
         break;
-    case CanvasObject::SHAPE:
+    case SHAPE:
         qDebug() << "Shape creation not supported.";
         break;
-    case CanvasObject::TEXT:
+    case TEXT:
         qDebug() << "Text creation not supported.";
         break;
-    case CanvasObject::BACKGROUND_IMAGE:
+    case BACKGROUND_IMAGE:
         qDebug() << "Background image creation not supported.";
         break;
     default:
@@ -73,42 +81,117 @@ std::unique_ptr<CanvasObject> ClientWebSocketHandler::createObject(CanvasObject:
     return nullptr;
 }
 
-void ClientWebSocketHandler::handleEvent(const nlohmann::json& event) {
-    assert(event["room_id"] == state.room_id);
+std::vector<QColor> colors = {
+    QColor{255, 0, 0},
+    QColor{255, 127, 0},
+    // QColor{255, 255, 0}, remove yellow
+    QColor{0, 255, 0},
+    QColor{0, 0, 255},
+    QColor{75, 0, 130},
+    QColor{148, 0, 211},
+};
 
-    auto event_type = static_cast<CanvasObject::EventType>(event["event_type"]);
-    switch(event_type) {
-    case CanvasObject::CREATE: {
-        state.manipulatePage(event["page_id"], [this, event](Page& page) mutable {
-            auto object_type = static_cast<CanvasObject::ObjectType>(event["object_type"]);
+QColor stringToColor(const std::string &string)
+{
+    int sum = 0;
+    for (char c : string)
+        sum += c;
 
-            std::unique_ptr<CanvasObject> object = createObject(object_type);
-            object->fromJson(event);
-            page.addObject(std::move(object));
-        });
+    return colors[sum % colors.size()];
+}
+
+void ClientWebSocketHandler::handleEvent(const nlohmann::json &event)
+{
+    // assert(event["room_id"] == state.room_id);
+
+    auto event_type = static_cast<EventType>(event["event_type"]);
+    switch (event_type)
+    {
+    case CREATE:
+    {
+        auto object_type = static_cast<EventObjectType>(event["object_type"]);
+        switch (object_type)
+        {
+
+        case ROOM:
+        {
+            // replace everything
+            state.fromJson(event);
+            break;
+        }
+        case PAGE:
+        {
+            state.applyInsertPageEvent(event);
+            break;
+        }
+
+        case STROKE:
+        case SYMBOL:
+        case SHAPE:
+        case TEXT:
+        case BACKGROUND_IMAGE:
+            state.manipulatePage(event["page_id"], [this, event, object_type](Page &page) mutable
+                                 {
+                std::unique_ptr<CanvasObject> object =
+                    createCanvasObject(object_type, *page.scene, stringToColor(event["owner_id"]));
+                object->fromJson(event);
+                page.addObject(std::move(object)); });
+            break;
+        default:
+            qDebug("fake object type");
+            assert(false);
+        }
         break;
     }
-    case CanvasObject::DELETE: {
+    case DELETE:
+    {
+        auto object_type = static_cast<EventObjectType>(event["object_type"]);
+        switch (object_type)
+        {
+        case ROOM:
+        {
+            // replace everything
+            qDebug() << "can't delete a room I dont think???";
+            assert(false);
+            break;
+        }
+        case PAGE:
+        {
+            state.applyDeletePageEvent(event);
+            break;
+        }
+        case STROKE:
+        case SYMBOL:
+        case SHAPE:
+        case TEXT:
+        case BACKGROUND_IMAGE:
+        {
+            uint64_t object_id = event["object_id"];
+            state.manipulatePage(event["page_id"], [object_id](Page &page)
+                                 { page.deleteObject(object_id); });
+            break;
+        }
+        default:
+            qDebug("fake object type");
+            assert(false);
+        }
+        break;
+    }
+    case MOVE:
+    case SCALE:
+    case ROTATE:
+    case APPEND:
+    case EDIT:
+    {
+        // assume its an object
         uint64_t object_id = event["object_id"];
-        state.manipulatePage(event["page_id"], [object_id](Page& page){
-            page.deleteObject(object_id);
-        });
+        state.manipulatePage(event["page_id"], [object_id, event](Page &page)
+                             { page.manipulateObject(object_id, [event](CanvasObject &canvas_object)
+                                                     { canvas_object.applyEvent(event); }); });
         break;
     }
-    case CanvasObject::MOVE:
-    case CanvasObject::SCALE:
-    case CanvasObject::ROTATE:
-    case CanvasObject::APPEND:
-    case CanvasObject::EDIT: {
-        uint64_t object_id = event["object_id"];
-        state.manipulatePage(event["page_id"], [object_id, event](Page& page){
-            page.manipulateObject(object_id, [event](CanvasObject& canvas_object){
-                canvas_object.applyEvent(event);
-            });
-        });
-        break;
-    }
-    default: {
+    default:
+    {
         qDebug() << "event type not recognized in clientwebsockethandler";
         assert(false);
         break;

@@ -1,18 +1,26 @@
 #pragma once
 
-#include "RandomIdGenerator.hpp"
 #include "CanvasObject.hpp"
+#include "RandomIdGenerator.hpp"
 #include <cstdint>
 #include <list>
 #include <map>
 #include <memory> // Include for smart pointers
 #include <mutex>
+#ifdef NOTEWORTHY_QT
+#include <qgraphicsscene.h>
+#endif
 
 #include "nlohmann/ordered_map.hpp"
 
 class Page
 {
 public:
+    uint64_t page_id;
+#ifdef NOTEWORTHY_QT
+    std::shared_ptr<QGraphicsScene> scene = std::make_shared<QGraphicsScene>();
+#endif
+
     std::unique_ptr<CanvasObject> deleteObject(uint64_t id)
     {
         std::lock_guard<std::mutex> lock(page_mutex);
@@ -27,19 +35,12 @@ public:
         object_map[object.get()->object_id] = std::move(object);
     }
 
-    void manipulateObject(uint64_t id, const std::function<void(CanvasObject &)> &manipulator)
+    void
+    manipulateObject(uint64_t id,
+                     const std::function<void(CanvasObject &)> &manipulator)
     {
         std::lock_guard<std::mutex> lock(page_mutex);
         manipulator(*object_map[id]);
-    }
-
-    void forEach(const std::function<void(uint64_t, CanvasObject &)> &manipulator)
-    {
-        std::lock_guard<std::mutex> lock(page_mutex);
-        for (auto &[id, object] : object_map)
-        {
-            manipulator(id, *object);
-        }
     }
 
 private:
@@ -51,26 +52,63 @@ class RoomState
 {
 public:
     std::string room_id;
+    std::string owner_id;
 
-    RoomState(const std::string &room_id) : room_id(room_id) {};
-
-    uint64_t createPageAfter(uint64_t previous_page_id)
+    void toJson(nlohmann::json &json)
     {
-        // Create a unique page ID
-        uint64_t new_page_id;
-        do
-        {
-            new_page_id = IDGenerator::newID();
-        } while (page_map.count(new_page_id) > 0);
+        json["owner_id"] = owner_id;
+        json["room_id"] = room_id;
+        json["object_type"] = ROOM;
+    }
 
-        // Create a page using smart pointer
-        auto page = std::make_unique<Page>();
+    void fromJson(const nlohmann::json &json)
+    {
+        json.at("owner_id").get_to(owner_id);
+        json.at("room_id").get_to(room_id);
+    }
 
-        // Add page after
-        addPageAfter(previous_page_id, new_page_id, std::move(page));
+    void createCreateRoomEvent(nlohmann::json &json)
+    {
+        toJson(json);
+        json["event_type"] = CREATE;
+    }
 
-        // Return the new ID
-        return new_page_id;
+    void applyCreateRoomEvent(const nlohmann::json &json)
+    {
+        fromJson(json);
+        page_map.clear();
+    }
+
+    void createInsertPageEvent(nlohmann::json &json, uint64_t previous_page_id,
+                               uint64_t new_page_id)
+    {
+        json["room_id"] = room_id;
+        json["event_type"] = CREATE;
+        json["object_type"] = PAGE;
+        json["page_id"] = new_page_id;
+        json["previous_page_id"] = previous_page_id;
+    }
+
+    void applyInsertPageEvent(const nlohmann::json &json)
+    {
+        std::unique_ptr<Page> page = std::make_unique<Page>();
+        json.at("page_id").get_to(page->page_id);
+        uint64_t previous_page_id = json["previous_page_id"];
+        addPageAfter(previous_page_id, std::move(page));
+    }
+
+    void createDeletePageEvent(nlohmann::json &json, uint64_t page_id)
+    {
+        json["room_id"] = room_id;
+        json["event_type"] = DELETE;
+        json["object_type"] = PAGE;
+        json["page_id"] = page_id;
+    }
+
+    void applyDeletePageEvent(const nlohmann::json &json)
+    {
+        uint64_t page_id = json["page_id"];
+        deletePage(page_id);
     }
 
     void deletePage(uint64_t id)
@@ -80,9 +118,9 @@ public:
         page_order.remove(id);
     }
 
-    void addPageAfter(uint64_t previous_page_id, uint64_t new_page_id,
-                      std::unique_ptr<Page> page)
+    void addPageAfter(uint64_t previous_page_id, std::unique_ptr<Page> page)
     {
+        uint64_t new_page_id = page->page_id;
         std::lock_guard<std::mutex> lock(room_mutex);
         page_map[new_page_id] = std::move(page); // Store unique_ptr in the map
 
@@ -99,12 +137,65 @@ public:
         page_order.insert(std::next(it), new_page_id);
     }
 
-    void manipulatePage(uint64_t id, const std::function<void(Page &)> &manipulator)
+    void manipulatePage(uint64_t id,
+                        const std::function<void(Page &)> &manipulator)
     {
         std::lock_guard<std::mutex> lock(room_mutex);
         auto it = page_map.find(id);
         assert(it != page_map.end());
         manipulator(*it->second); // Pass to manipulator by reference
+    }
+
+    bool getNextPageId(uint64_t page_id, uint64_t &next_page_id)
+    {
+        auto it = std::find(page_order.begin(), page_order.end(), page_id);
+
+        if (it == page_order.end())
+        {
+            qDebug("page doesn't exist when trying to find next page!!");
+            assert(false);
+        }
+
+        ++it; // Move to the next item
+
+        if (it == page_order.end())
+        {
+            return false;
+        }
+
+        next_page_id = *it;
+        return true;
+    }
+
+    bool getPrevPageId(uint64_t page_id, uint64_t &prev_page_id)
+    {
+        auto it = std::find(page_order.begin(), page_order.end(), page_id);
+
+        if (it == page_order.end())
+        {
+            qDebug("page doesn't exist when trying to find next page!!");
+            assert(false);
+        }
+
+        if (it == page_order.begin())
+        {
+            return false;
+        }
+
+        --it; // Move to the previous item
+
+        prev_page_id = *it;
+        return true;
+    }
+
+    bool getFirstPageId(uint64_t &first_page_id)
+    {
+        if (page_order.empty())
+        {
+            return false;
+        }
+        first_page_id = page_order.front();
+        return true;
     }
 
 private:

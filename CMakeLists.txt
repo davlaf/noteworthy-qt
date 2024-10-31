@@ -22,7 +22,7 @@ ExternalProject_Add(NLOHMANN
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DJSON_BuildTests=OFF
 )
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}) # probably unnecessary
 include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
@@ -32,21 +32,25 @@ find_package(Qt6 REQUIRED COMPONENTS WebSockets)
 
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+        RoomPage.cpp
+        RoomPage.hpp
+        RoomPage.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(noteworthy-qt
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        tabletgraphicsview.h tabletgraphicsview.cpp
+        tabletgraphicsview.hpp tabletgraphicsview.cpp
         Stroke.hpp
         RoomState.hpp RoomState.cpp
         RandomIdGenerator.hpp RandomIdGenerator.cpp
         ClientWebSocketHandler.hpp ClientWebSocketHandler.cpp
         CanvasObject.hpp
+        WelcomePage.hpp WelcomePage.cpp WelcomePage.ui
+        Homepage.hpp Homepage.cpp Homepage.ui
+        AppNavigator.hpp AppNavigator.cpp
+        EventTypeEnums.hpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET noteworthy-qt APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

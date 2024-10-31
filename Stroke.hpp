@@ -1,10 +1,10 @@
 #pragma once
-#include <qgraphicsitem.h>
 #ifdef NOTEWORTHY_QT
+#include <qgraphicsitem.h>
 #include <qpainterpath.h>
 #endif
 #include "CanvasObject.hpp"
-#include <string>
+#include "EventTypeEnums.hpp"
 #include <vector>
 
 #include "nlohmann/json.hpp"
@@ -21,10 +21,7 @@ public:
 #endif
 
 public:
-    ObjectType getObjectType()
-    {
-        return STROKE;
-    };
+    EventObjectType getObjectType() { return STROKE; };
 
     virtual void toJson(nlohmann::json &json)
     {
@@ -69,7 +66,8 @@ private:
     }
 
 public:
-    virtual void applyRotateEvent(double rotation_center_x, double rotation_center_y,
+    virtual void applyRotateEvent(double rotation_center_x,
+                                  double rotation_center_y,
                                   double rotation_degrees)
     {
         for (auto &point : points)
@@ -79,8 +77,9 @@ public:
         }
     }
 
-    virtual void createAppendEvent(nlohmann::json &json,
-                                   std::vector<std::vector<double>> new_points)
+    virtual void
+    createAppendEvent(nlohmann::json &json,
+                      std::vector<std::vector<double>> new_points)
     {
         addMetaInformation(json);
         json["event_type"] = APPEND;
@@ -97,14 +96,12 @@ public:
     }
 
 #ifdef NOTEWORTHY_QT
-    Stroke(QPainterPath &path, QGraphicsPathItem *path_item) : path(path), path_item(path_item) {};
+    Stroke(QPainterPath &path, QGraphicsPathItem *path_item)
+        : path(path), path_item(path_item) {};
 
     Stroke(QPainterPath &path) : path(path) {};
 
-    Stroke()
-    {
-        qDebug("Created empty stroke??? (a copy happened) (bad)");
-    };
+    Stroke() { qDebug("Created empty stroke??? (a copy happened) (bad)"); };
 
     ~Stroke() // TODO: look into this
     {
