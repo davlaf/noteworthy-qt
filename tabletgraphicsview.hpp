@@ -10,6 +10,7 @@
 #include <QTouchEvent>
 #include <QGraphicsPathItem>
 #include <qwebsocket.h>
+#include "EventTypeEnums.hpp"
 
 class TabletGraphicsView : public QGraphicsView
 {
@@ -52,8 +53,8 @@ private:
     void handleRelease(QPointF position, int id);
     void handleMove(QPointF position, int id);
 
-    enum CanvasObject::ObjectType current_object = CanvasObject::STROKE;
-    enum CanvasObject::EventType current_transform = CanvasObject::CREATE;
+    enum EventObjectType current_object = STROKE;
+    enum EventType current_transform = CREATE;
 
     QPen pen;
 
