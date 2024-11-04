@@ -3,6 +3,8 @@
 #include "Homepage.hpp"
 #include "RoomPage.hpp"
 #include "WelcomePage.hpp"
+#include "RoomState.hpp"
+
 class AppNavigator
 {
 public:

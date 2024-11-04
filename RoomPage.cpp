@@ -1,4 +1,5 @@
 #include "RoomPage.hpp"
+#include "RoomState.hpp"
 #include "./ui_RoomPage.h"
 
 RoomPage::RoomPage(QWidget *parent)
