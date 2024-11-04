@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ClientWebSocketHandler.hpp"
-#include "RoomState.hpp"
 #include "Stroke.hpp"
 #include <QGraphicsView>
 #include <QWidget>
@@ -52,6 +51,10 @@ private:
     void handleTouch(QPointF position, int id);
     void handleRelease(QPointF position, int id);
     void handleMove(QPointF position, int id);
+
+    enum CanvasObject::ObjectType current_object = CanvasObject::STROKE;
+    enum CanvasObject::EventType current_transform = CanvasObject::CREATE;
+
     QPen pen;
 
     std::unique_ptr<Stroke> current_stroke;

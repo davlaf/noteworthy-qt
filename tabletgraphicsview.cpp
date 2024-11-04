@@ -1,6 +1,7 @@
 #include "tabletgraphicsview.hpp"
 #include "RoomState.hpp"
 #include <QWebSocketHandshakeOptions>
+#include "EventTypeEnums.hpp"
 
 #include "Stroke.hpp"
 
@@ -22,19 +23,62 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
     // Initialize current_path with a new QPainterPath
     auto current_path = QPainterPath(scenePos);
 
-    // Create a Stroke using the current_path
-    current_stroke = std::make_unique<Stroke>(current_path);
-    current_stroke->room_id = state.room_id;
-    current_stroke->page_id = current_page_id;
-    current_stroke->owner_id = user_id;
-    current_stroke->object_id = IDGenerator::newID();
+    switch (current_transform)
+    {
+    case (CREATE):
+    {
+        switch (current_object)
+        {
+        case (STROKE):
+        {
+            // Create a Stroke using the current_path
+            current_stroke = std::make_unique<Stroke>(current_path);
+            current_stroke->room_id = state.room_id;
+            current_stroke->page_id = current_page_id;
+            current_stroke->owner_id = user_id;
+            current_stroke->object_id = IDGenerator::newID();
 
-    nlohmann::json event;
-    current_stroke->createCreateEvent(event);
-
-    std::string event_string = event.dump();
-    ws_handler->handleEvent(event);
-    ws_handler->sendEvent(event);
+            nlohmann::json event;
+            current_stroke->createCreateEvent(event);
+            ws_handler->sendEvent(event);
+            ws_handler->handleEvent(event);
+        }
+        case (SHAPE):
+        {
+        }
+        case (TEXT):
+        {
+        }
+        case (SYMBOL):
+        {
+        }
+        case (BACKGROUND_IMAGE):
+        {
+        }
+        default:
+        {
+        }
+        }
+    }
+    case DELETE:
+    {
+    }
+    case MOVE:
+    {
+    }
+    case SCALE:
+    {
+    }
+    case ROTATE:
+    {
+    }
+    case APPEND:
+    {
+    }
+    case EDIT:
+    {
+    }
+    }
 }
 
 void TabletGraphicsView::handleMove(QPointF position, int id)
