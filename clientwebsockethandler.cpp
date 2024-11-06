@@ -121,6 +121,7 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json &event)
         }
         case PAGE:
         {
+            emit pageCreated(event["page_id"]);
             state.applyInsertPageEvent(event);
             break;
         }
@@ -157,7 +158,9 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json &event)
         }
         case PAGE:
         {
+            emit pageDeleted(event["page_id"]);
             state.applyDeletePageEvent(event);
+
             break;
         }
         case STROKE:

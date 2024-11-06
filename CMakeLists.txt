@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(noteworthy-qt VERSION 0.1 LANGUAGES CXX)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -g")
 
 add_definitions(-DNOTEWORTHY_QT)
 

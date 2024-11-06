@@ -2,6 +2,7 @@
 #include "RoomState.hpp"
 #include <QWebSocketHandshakeOptions>
 #include "EventTypeEnums.hpp"
+#include "RandomIdGenerator.hpp"
 
 #include "Stroke.hpp"
 
@@ -9,7 +10,7 @@ using json = nlohmann::json; // Define a shorthand for the json type
 
 void TabletGraphicsView::handleTouch(QPointF position, int id)
 {
-    qDebug() << "Touch pressed at:" << position << "with ID:" << id;
+    // qDebug() << "Touch pressed at:" << position << "with ID:" << id;
 
     // ignore touches if not on a page
     if (current_page_id == 0)
@@ -83,7 +84,7 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
 
 void TabletGraphicsView::handleMove(QPointF position, int id)
 {
-    qDebug() << "Touch moved to:" << position << "with ID:" << id;
+    // qDebug() << "Touch moved to:" << position << "with ID:" << id;
     // only care about 1 touch
     if (id != currentTouchId)
     {
@@ -111,7 +112,7 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
 void TabletGraphicsView::handleRelease(QPointF position, int id)
 {
 
-    qDebug() << "Touch released at:" << position << "with ID:" << id;
+    // qDebug() << "Touch released at:" << position << "with ID:" << id;
     // only care about 1 touch
     if (id != currentTouchId)
     {

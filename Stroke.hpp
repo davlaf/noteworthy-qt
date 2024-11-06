@@ -33,6 +33,9 @@ public:
     {
         retrieveMetaInformation(json);
         json.at("points").get_to(points);
+#ifdef NOTEWORTHY_QT
+        updateQtScene();
+#endif
     }
 
     virtual void applyMoveEvent(double distance_x, double distance_y)
@@ -111,6 +114,9 @@ public:
     void updateQtPath()
     {
         path.clear();
+        if (points.size() == 0) {
+            return;
+        }
         std::vector<double> starting_vector = points.at(0);
         QPointF starting_point{starting_vector.at(0), starting_vector.at(1)};
         path.moveTo(starting_point);

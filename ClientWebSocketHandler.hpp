@@ -21,6 +21,8 @@ public:
 
 signals:
     void closed();
+    void pageCreated(uint64_t page_id);
+    void pageDeleted(uint64_t page_id);
 
 private Q_SLOTS:
     void onConnected();

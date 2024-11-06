@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CanvasObject.hpp"
-#include "RandomIdGenerator.hpp"
 #include <cstdint>
 #include <list>
 #include <map>
@@ -43,6 +42,15 @@ public:
         manipulator(*object_map[id]);
     }
 
+    void forEach(const std::function<void(CanvasObject &)> &manipulator)
+    {
+        std::lock_guard<std::mutex> lock(page_mutex);
+        for (auto &[id, object] : object_map)
+        {
+            manipulator(*object);
+        }
+    }
+
 private:
     std::mutex page_mutex;
     nlohmann::ordered_map<uint64_t, std::unique_ptr<CanvasObject>> object_map;
@@ -59,6 +67,29 @@ public:
         json["owner_id"] = owner_id;
         json["room_id"] = room_id;
         json["object_type"] = ROOM;
+    }
+
+    void toJsonEventList(nlohmann::json &json)
+    {
+
+        // std::lock_guard<std::mutex> lock(room_mutex);
+        // first do a create room event
+        nlohmann::json home_json;
+        createCreateRoomEvent(home_json);
+        json.push_back(home_json);
+        // then add create page event each page and add all the objects of that
+        // page add last page first, adding the next pages at position 0 so they
+        // are in order
+        forEachReverse([this, &json](Page &page) mutable
+                       {
+            nlohmann::json create_page_json;
+            createInsertPageEvent(create_page_json, 0, page.page_id);
+            json.push_back(create_page_json);
+            page.forEach([this, &json](CanvasObject &object) mutable {
+                nlohmann::json create_canvas_object_json;
+                object.createCreateEvent(create_canvas_object_json);
+                json.push_back(create_canvas_object_json);
+            }); });
     }
 
     void fromJson(const nlohmann::json &json)
@@ -126,7 +157,7 @@ public:
 
         if (previous_page_id == 0)
         {
-            page_order.push_back(new_page_id);
+            page_order.push_front(new_page_id);
             return;
         }
 
@@ -146,14 +177,21 @@ public:
         manipulator(*it->second); // Pass to manipulator by reference
     }
 
+    void forEachReverse(const std::function<void(Page &)> &manipulator)
+    {
+        for (auto it = page_order.rbegin(); it != page_order.rend(); it++)
+        {
+            manipulatePage(*it, manipulator);
+        }
+    }
+
     bool getNextPageId(uint64_t page_id, uint64_t &next_page_id)
     {
         auto it = std::find(page_order.begin(), page_order.end(), page_id);
 
         if (it == page_order.end())
         {
-            qDebug("page doesn't exist when trying to find next page!!");
-            assert(false);
+            throw "page doesn't exist when trying to find next page!!";
         }
 
         ++it; // Move to the next item
@@ -173,8 +211,7 @@ public:
 
         if (it == page_order.end())
         {
-            qDebug("page doesn't exist when trying to find next page!!");
-            assert(false);
+            throw "page doesn't exist when trying to find prev page!!";
         }
 
         if (it == page_order.begin())

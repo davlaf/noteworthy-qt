@@ -16,6 +16,6 @@ Homepage::~Homepage()
 
 void Homepage::on_join_button_pressed()
 {
-    navigator->goToRoomPage(ui->room_code->text().toStdString(), username.toStdString());
+    navigator->goToRoomPageJoin(ui->room_code->text().toStdString(), username.toStdString());
 }
 
