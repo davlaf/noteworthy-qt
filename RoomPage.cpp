@@ -2,6 +2,7 @@
 #include "RandomIdGenerator.hpp"
 #include "RoomState.hpp"
 #include "./ui_RoomPage.h"
+#include "AppNavigator.hpp"
 
 RoomPage::RoomPage(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::RoomPage)
@@ -26,6 +27,8 @@ void RoomPage::initialize(std::string initial_room)
     ui->graphics->ws_handler->openConnection();
     ui->graphics->setScene(&no_page_scene);
     ui->graphics->user_id = user_id;
+
+    ui->room_code->setText("Room Code: "+QString::fromStdString(room_id));
 
     connect(
         ui->graphics->ws_handler.get(),
@@ -154,5 +157,11 @@ void RoomPage::on_output_room_clicked()
     state.toJsonEventList(json);
 
     std::string output = json.dump();
+}
+
+
+void RoomPage::on_exit_clicked()
+{
+    navigator->goToHomepage();
 }
 

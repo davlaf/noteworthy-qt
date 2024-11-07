@@ -24,8 +24,16 @@ public:
         ui->name->setText(username);
     }
 
+    void setErrorText(const QString& error) {
+        ui->error->setText(error);
+    }
+
 private slots:
     void on_join_button_pressed();
+
+    void on_create_room_clicked();
+
+    void on_room_code_textChanged(const QString &arg1);
 
 private:
     Ui::Homepage *ui;

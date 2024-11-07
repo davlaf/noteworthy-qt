@@ -189,9 +189,9 @@ public:
     {
         auto it = std::find(page_order.begin(), page_order.end(), page_id);
 
-        if (it == page_order.end())
+        if (it == page_order.end()) // if there are no pages
         {
-            throw "page doesn't exist when trying to find next page!!";
+            return false;
         }
 
         ++it; // Move to the next item
@@ -209,9 +209,9 @@ public:
     {
         auto it = std::find(page_order.begin(), page_order.end(), page_id);
 
-        if (it == page_order.end())
+        if (it == page_order.end())  // if there are no pages
         {
-            throw "page doesn't exist when trying to find prev page!!";
+            return false;
         }
 
         if (it == page_order.begin())

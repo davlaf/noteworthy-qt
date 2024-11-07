@@ -31,16 +31,22 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="exit">
+       <widget class="QLabel" name="room_code">
+        <property name="minimumSize">
+         <size>
+          <width>130</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Exit room</string>
+         <string>Room Code:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="output_room">
+       <widget class="QPushButton" name="exit">
         <property name="text">
-         <string>Export Room</string>
+         <string>Exit room</string>
         </property>
        </widget>
       </item>

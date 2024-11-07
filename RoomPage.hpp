@@ -22,6 +22,7 @@ public:
     RoomPage(QWidget *parent = nullptr);
     ~RoomPage();
     std::string user_id;
+    std::string room_id;
     QGraphicsScene no_page_scene;
 
     void initialize(std::string initial_room = "[]");
@@ -39,6 +40,8 @@ private slots:
     void handleDeletePageUIChange(uint64_t page_id);
 
     void on_output_room_clicked();
+
+    void on_exit_clicked();
 
 private:
     Ui::RoomPage *ui;

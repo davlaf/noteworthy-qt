@@ -19,3 +19,15 @@ void Homepage::on_join_button_pressed()
     navigator->goToRoomPageJoin(ui->room_code->text().toStdString(), username.toStdString());
 }
 
+void Homepage::on_create_room_clicked()
+{
+    //TODO: room creation
+    // navigator->goToRoomPageCreate(, username.toStdString());
+}
+
+
+void Homepage::on_room_code_textChanged(const QString &arg1)
+{
+    setErrorText("");
+}
+

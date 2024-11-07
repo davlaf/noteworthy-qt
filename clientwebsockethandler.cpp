@@ -18,8 +18,8 @@ void ClientWebSocketHandler::openConnection()
 {
     QWebSocketHandshakeOptions options;
     options.setSubprotocols({"echo-protocol"});
-    // webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
-    webSocket.open(QUrl("ws://localhost:8081/"), options);
+    webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
+    // webSocket.open(QUrl("ws://localhost:8081/"), options);
 }
 
 void ClientWebSocketHandler::onConnected()
@@ -37,8 +37,13 @@ void ClientWebSocketHandler::onError(QAbstractSocket::SocketError error)
 
 void ClientWebSocketHandler::onTextMessageReceived(QString message)
 {
-    nlohmann::json event = nlohmann::json::parse(message.toStdString());
-    handleEvent(event);
+    try {
+        nlohmann::json event = nlohmann::json::parse(message.toStdString());
+        handleEvent(event);
+    } catch (...) {
+        qDebug() << "error handling!!!!";
+    }
+
 }
 
 void ClientWebSocketHandler::sendEvent(const nlohmann::json &event)
@@ -102,7 +107,10 @@ QColor stringToColor(const std::string &string)
 
 void ClientWebSocketHandler::handleEvent(const nlohmann::json &event)
 {
-    // assert(event["room_id"] == state.room_id);
+    if (event["room_id"] != state.room_id) {
+        return;
+    } // ignore events from other rooms
+    // TODO: make this on the server side instead
 
     auto event_type = static_cast<EventType>(event["event_type"]);
     switch (event_type)
