@@ -22,6 +22,11 @@ public:
 public:
     void setLabelText(const QString &text);
 
+    void setUsername(const QString& username);
+    QString username;
+
+    void setErrorText(const QString& error);
+
 
 private slots:
     void on_lineEdit_5_textChanged(const QString &arg1);
@@ -35,8 +40,6 @@ private slots:
     void on_lineEdit_9_textChanged(const QString &arg1);
 
     void on_codeEnter_clicked();
-
-    void on_pushButton_2_clicked();
 
     void on_changename_clicked();
 

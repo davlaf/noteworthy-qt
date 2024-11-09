@@ -516,7 +516,7 @@ border-radius: 20px;
           </widget>
          </item>
          <item>
-          <widget class="QGraphicsView" name="graphicsView">
+          <widget class="TabletGraphicsView" name="graphics">
            <property name="minimumSize">
             <size>
              <width>280</width>
@@ -537,6 +537,13 @@ background-color: transparent;</string>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TabletGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header location="global">tabletgraphicsview.hpp</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

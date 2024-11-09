@@ -14,13 +14,23 @@
 #include <QJsonObject>
 #include <QDebug>
 #include <QMessageBox>
+#include "newuser.h"
+#include "widget.h"
+#include "drawingroom.h"
+
+
 
 class AppNavigator
 {
 public:
-    Homepage homepage;
-    WelcomePage welcome_page;
-    RoomPage room_page;
+    // Homepage homepage;
+    // WelcomePage welcome_page;
+    // RoomPage room_page;
+    NewUser welcome_page;
+    Widget homepage;
+    drawingRoom room_page;
+
+
     LoadingRoomPage loading_room_page;
 
     void goToWelcomePage() {

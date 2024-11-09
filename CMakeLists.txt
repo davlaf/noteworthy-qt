@@ -29,12 +29,34 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 find_package(Qt6 REQUIRED COMPONENTS WebSockets)
+find_package(Qt6 REQUIRED COMPONENTS Svg)
 
 set(PROJECT_SOURCES
         main.cpp
         RoomPage.cpp
         RoomPage.hpp
         RoomPage.ui
+        WelcomePage.cpp
+        WelcomePage.hpp  
+        WelcomePage.ui
+        Homepage.cpp
+        Homepage.hpp  
+        Homepage.ui
+        loadingroompage.cpp
+        loadingroompage.h  
+        loadingroompage.ui
+        # hannah stuff
+        newuser.cpp
+        newuser.h
+        newuser.ui
+        widget.cpp
+        widget.h
+        widget.ui
+        drawingroom.cpp
+        drawingroom.h
+        drawingroom.ui
+
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -47,12 +69,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         RandomIdGenerator.hpp RandomIdGenerator.cpp
         ClientWebSocketHandler.hpp ClientWebSocketHandler.cpp
         CanvasObject.hpp
-        WelcomePage.hpp WelcomePage.cpp WelcomePage.ui
-        Homepage.hpp Homepage.cpp Homepage.ui
         AppNavigator.hpp AppNavigator.cpp
         EventTypeEnums.hpp
         Selection.hpp
-        loadingroompage.h loadingroompage.cpp loadingroompage.ui
+        resource.qrc
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET noteworthy-qt APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -75,6 +95,8 @@ endif()
 target_link_libraries(noteworthy-qt PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 target_link_libraries(noteworthy-qt PRIVATE Qt${QT_VERSION_MAJOR}::WebSockets)
+
+target_link_libraries(noteworthy-qt PRIVATE Qt6::Svg)
 
 add_dependencies(${PROJECT_NAME} NLOHMANN)
 

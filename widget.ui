@@ -562,20 +562,41 @@ font: 35pt;
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_5">
-     <property name="font">
-      <font>
-       <pointsize>35</pointsize>
-       <fontweight>Light</fontweight>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: rgba(144, 195, 200, 0.4);
+    <widget class="QWidget" name="widget_7" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <item>
+       <widget class="QLabel" name="label_5">
+        <property name="font">
+         <font>
+          <pointsize>35</pointsize>
+          <fontweight>Light</fontweight>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: rgba(144, 195, 200, 0.4);
 </string>
-     </property>
-     <property name="text">
-      <string>v0.0.1(1)</string>
-     </property>
+        </property>
+        <property name="text">
+         <string>v0.0.1(1)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="error">
+        <property name="font">
+         <font>
+          <pointsize>35</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: rgb(157, 1, 9);</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

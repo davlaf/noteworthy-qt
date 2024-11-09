@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QPushButton>
+#include <QGraphicsScene>
 
 namespace Ui {
 class drawingRoom;
@@ -19,6 +20,28 @@ public:
     void setCodeLabel(const QString &codeText);
     void setButtonIconWithColor(QPushButton *button, const QString &svgPath, const QColor &color);
     void setUser(const QString &initial);
+    std::string user_id;
+    std::string room_id;
+    QGraphicsScene no_page_scene;
+
+    void initialize(std::string initial_room = "[]");
+
+    void on_create_page_clicked();
+    void on_delete_page_clicked();
+
+
+    void handleCreatePageUIChange(uint64_t page_id);
+
+    void handleDeletePageUIChange(uint64_t page_id);
+
+
+
+    void on_output_room_clicked();
+
+
+
+    void on_exit_clicked();
+
 
 
 private slots:

@@ -179,3 +179,11 @@ void Widget::on_newpage_clicked()
 
 }
 
+void Widget::setUsername(const QString& username) {
+    this->username = username;
+    ui->name->setText(username);
+}
+
+void Widget::setErrorText(const QString& error) {
+    ui->error->setText(error);
+}
