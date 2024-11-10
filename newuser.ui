@@ -236,14 +236,12 @@ border-radius: 0px;
     padding: 2px 0;          
 	text-align: center;  /* Center-align text */
 	color: rgba(36, 87, 123, 0.2);
-	backround-color: #fff
 
 }
 
 QLineEdit:focus {
-    border-bottom: 2px solid blue; /* Optional: change underline color when focused */
-}
-</string>
+    color: rgba(0, 0, 0, 0.8);
+}</string>
            </property>
            <property name="text">
             <string/>

@@ -235,9 +235,6 @@ border-radius: 60px; </string>
                 <string notr="true"> width: 127px;          /* Set the width of the circular area */
     height: 136px;         /* Set the height of the circular area */
     border-radius: 50px;    /* Make the area circular */
-    display: flex;         /* Use flexbox to center the text */
-    align-items: center;   /* Vertically center the text */
-    justify-content: center; /* Horizontally center the text */
     background-color: white; /* Optional: Set background color */
     font-size: 120px;      /* Set the font size */
     font-weight: bold;     /* Make the text bold */
@@ -258,9 +255,6 @@ border-radius: 60px; </string>
                 <string notr="true"> width: 127px;          /* Set the width of the circular area */
     height: 136px;         /* Set the height of the circular area */
     border-radius: 50px;    /* Make the area circular */
-    display: flex;         /* Use flexbox to center the text */
-    align-items: center;   /* Vertically center the text */
-    justify-content: center; /* Horizontally center the text */
     background-color: white; /* Optional: Set background color */
     font-size: 120px;      /* Set the font size */
     font-weight: bold;     /* Make the text bold */
@@ -281,9 +275,6 @@ border-radius: 60px; </string>
                 <string notr="true"> width: 127px;          /* Set the width of the circular area */
     height: 136px;         /* Set the height of the circular area */
     border-radius: 50px;    /* Make the area circular */
-    display: flex;         /* Use flexbox to center the text */
-    align-items: center;   /* Vertically center the text */
-    justify-content: center; /* Horizontally center the text */
     background-color: white; /* Optional: Set background color */
     font-size: 120px;      /* Set the font size */
     font-weight: bold;     /* Make the text bold */
@@ -304,9 +295,6 @@ border-radius: 60px; </string>
                 <string notr="true"> width: 127px;          /* Set the width of the circular area */
     height: 136px;         /* Set the height of the circular area */
     border-radius: 50px;    /* Make the area circular */
-    display: flex;         /* Use flexbox to center the text */
-    align-items: center;   /* Vertically center the text */
-    justify-content: center; /* Horizontally center the text */
     background-color: white; /* Optional: Set background color */
     font-size: 120px;      /* Set the font size */
     font-weight: bold;     /* Make the text bold */
@@ -327,9 +315,6 @@ border-radius: 60px; </string>
                 <string notr="true"> width: 127px;          /* Set the width of the circular area */
     height: 136px;         /* Set the height of the circular area */
     border-radius: 50px;    /* Make the area circular */
-    display: flex;         /* Use flexbox to center the text */
-    align-items: center;   /* Vertically center the text */
-    justify-content: center; /* Horizontally center the text */
     background-color: white; /* Optional: Set background color */
     font-size: 120px;      /* Set the font size */
     font-weight: bold;     /* Make the text bold */
@@ -478,7 +463,7 @@ font: 35pt;
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">fill: rgba(0, 0, 0, 0.7);</string>
+                <string notr="true">color: rgba(0, 0, 0, 0.7);</string>
                </property>
                <property name="text">
                 <string/>

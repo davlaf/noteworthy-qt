@@ -32,6 +32,7 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
         {
         case (STROKE):
         {
+            qDebug() << "new stroke epic!!";
             // Create a Stroke using the current_path
             current_stroke = std::make_unique<Stroke>(current_path);
             current_stroke->room_id = state.room_id;
