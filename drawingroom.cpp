@@ -565,7 +565,14 @@ void drawingRoom::initialize(std::string initial_room)
 // }
 
 void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
-   // nothing for now
+    // nothing for now
+
+    // get the page
+    state.manipulatePage(page_id, [](Page &page){
+        // scroll view in the slides tab
+        // create a widget with rounded corners and a border and inside is a QGraphicsView
+
+    });
 };
 
 void drawingRoom::handleDeletePageUIChange(uint64_t page_id) {

@@ -172,9 +172,7 @@ public:
                         const std::function<void(Page &)> &manipulator)
     {
         std::lock_guard<std::mutex> lock(room_mutex);
-        auto it = page_map.find(id);
-        assert(it != page_map.end());
-        manipulator(*it->second); // Pass to manipulator by reference
+        manipulator(*page_map.at(id)); // Pass to manipulator by reference
     }
 
     void forEachReverse(const std::function<void(Page &)> &manipulator)
