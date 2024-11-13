@@ -91,12 +91,12 @@ public:
         room_page.setNameLabel(QString::fromStdString(user_id)+"'s Room");
         room_page.setUser(QString::fromStdString(user_id).at(0));
 
-        fetchRoom(room_id, [room_id, user_id, this](std::string string, RoomHTTPCodes code){
+        fetchRoom(room_id, [room_id, user_id, this](std::string responseString, RoomHTTPCodes code){
             // epic
             switch (code) {
             case Ok:
                 room_page.show();
-                room_page.initialize(string);
+                room_page.initialize(responseString);
                 homepage.hide();
                 welcome_page.hide();
                 loading_room_page.hide();
@@ -112,11 +112,10 @@ public:
                 loading_room_page.setErrorText("Incorrect password");
                 break;
             case NotFound:
-                homepage.setErrorText("No room found with that code");
+                homepage.setErrorText("Invalid room code");
                 break;
             }
         }, password);
-
     }
 
     QNetworkAccessManager manager;
@@ -125,8 +124,8 @@ public:
         const std::string& room_id,
         const std::function<void(std::string, RoomHTTPCodes)> &onReply,
         const std::string password = "") {
-        QUrl url(QString::fromStdString("http://localhost:8080/rooms/"+room_id));
-        // QUrl url(QString::fromStdString("https://noteworthy.howdoesthiseven.work/v1/rooms/"+room_id));
+        // QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms/"+room_id));
+        QUrl url(QString::fromStdString("https://noteworthy.howdoesthiseven.work/v1/rooms/"+room_id));
         QNetworkRequest request(url);
 
         // Set the authorization header

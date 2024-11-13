@@ -20,11 +20,12 @@ public:
         QWidget *parent = nullptr) : QGraphicsView(parent)
     {
 
-        // uint64_t page_id,
-        // std::shared_ptr<QGraphicsScene> scene,
-        // std::shared_ptr<ClientWebSocketHandler> ws_handler,
-
         setAttribute(Qt::WA_AcceptTouchEvents); // Enable touch events
+        setAttribute(Qt::WA_TabletTracking);    // Enable tablet/stylus events
+        setMouseTracking(true);                 // Enable tracking mouse movement
+        setFocusPolicy(Qt::StrongFocus); // Allows mouse and keyboard events
+        setAttribute(Qt::WA_Hover);             // Enable hover events
+
         this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         // i dont know why I have to subtract 5
@@ -43,7 +44,7 @@ public:
         this->setScene(scene.get());
     }
 
-    uint64_t current_page_id;
+    uint64_t current_page_id = 0;
     std::string user_id;
 
 private:
@@ -64,18 +65,20 @@ private:
 protected:
     bool event(QEvent *event) override
     {
-        if (event->type() == QEvent::TouchBegin ||
-            event->type() == QEvent::TouchUpdate ||
-            event->type() == QEvent::TouchEnd)
+        switch (event->type())
         {
-
+        case QEvent::TouchBegin:
+        case QEvent::TouchUpdate:
+        case QEvent::TouchEnd:
+        {
+            // Handle touch events
             QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
-
             for (const QTouchEvent::TouchPoint &point : touchEvent->points())
             {
                 int id = point.id();            // ID of the touch point
                 QPointF pos = point.position(); // Current position of the touch point
                 Qt::TouchPointState pointState = static_cast<Qt::TouchPointState>(point.state());
+
                 switch (pointState)
                 {
                 case Qt::TouchPointPressed:
@@ -93,6 +96,51 @@ protected:
             }
             return true; // Event has been handled
         }
-        return QGraphicsView::event(event); // Pass the event to the base class if not handled
+
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseMove:
+        case QEvent::MouseButtonRelease:
+        {
+            // Handle mouse events
+            qDebug() << "mouse!";
+            QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+            QPointF pos = mouseEvent->position();
+            int id = 0; // Use 0 for mouse since there's usually only one pointer
+
+            switch (event->type())
+            {
+            case QEvent::MouseButtonPress:
+                handleTouch(pos, id);
+                break;
+            case QEvent::MouseMove:
+                handleMove(pos, id);
+                break;
+            case QEvent::MouseButtonRelease:
+                handleRelease(pos, id);
+                break;
+            default:
+                break;
+            }
+            return true; // Event has been handled
+        }
+
+        default:
+            break;
+        }
+
+        // Pass the event to the base class if not handled
+        return QGraphicsView::event(event);
+    }
+
+    void mouseMoveEvent(QMouseEvent *event) override
+    {
+        event->setAccepted(false);  // Indicate the event hasn't been fully handled
+        QGraphicsView::event(event); // Pass to `event()` for further handling
+    }
+
+    void mouseReleaseEvent(QMouseEvent *event) override
+    {
+        event->setAccepted(false);  // Mark event as unhandled
+        QGraphicsView::event(event); // Pass to `event()` for further handling
     }
 };

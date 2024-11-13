@@ -33,15 +33,15 @@ find_package(Qt6 REQUIRED COMPONENTS Svg)
 
 set(PROJECT_SOURCES
         main.cpp
-        RoomPage.cpp
-        RoomPage.hpp
-        RoomPage.ui
-        WelcomePage.cpp
-        WelcomePage.hpp  
-        WelcomePage.ui
-        Homepage.cpp
-        Homepage.hpp  
-        Homepage.ui
+
+
+
+
+
+
+
+
+
         loadingroompage.cpp
         loadingroompage.h  
         loadingroompage.ui

@@ -51,6 +51,8 @@ void Widget::setLabelText(const QString &text) {
 
 void Widget::on_lineEdit_5_textChanged(const QString &arg1)
 {
+    setErrorText("");
+
     if (arg1.isEmpty()) {
         ui->lineEdit_5->setFocus();  // Move back to previous line edit
         return;
@@ -65,6 +67,8 @@ void Widget::on_lineEdit_5_textChanged(const QString &arg1)
 
 void Widget::on_lineEdit_6_textChanged(const QString &arg1)
 {
+    setErrorText("");
+
     if (arg1.isEmpty()) {
         ui->lineEdit_5->setFocus();  // Move back to previous line edit
         return;
@@ -79,6 +83,8 @@ void Widget::on_lineEdit_6_textChanged(const QString &arg1)
 
 void Widget::on_lineEdit_7_textChanged(const QString &arg1)
 {
+    setErrorText("");
+
     if (arg1.isEmpty()) {
         ui->lineEdit_6->setFocus();  // Move back to previous line edit
         return;
@@ -93,6 +99,8 @@ void Widget::on_lineEdit_7_textChanged(const QString &arg1)
 
 void Widget::on_lineEdit_8_textChanged(const QString &arg1)
 {
+    setErrorText("");
+
     if (arg1.isEmpty()) {
         ui->lineEdit_7->setFocus();  // Move back to previous line edit
         return;
@@ -107,6 +115,8 @@ void Widget::on_lineEdit_8_textChanged(const QString &arg1)
 
 void Widget::on_lineEdit_9_textChanged(const QString &arg1)
 {
+    setErrorText("");
+
     if (arg1.isEmpty()) {
         ui->lineEdit_8->setFocus();  // Move back to previous line edit
         return;
@@ -117,10 +127,6 @@ void Widget::on_lineEdit_9_textChanged(const QString &arg1)
         ui->lineEdit_9->setFocus();
     }
 }
-
-
-
-
 
 void Widget::on_codeEnter_clicked()
 {
@@ -133,23 +139,15 @@ void Widget::on_codeEnter_clicked()
     navigator->goToRoomPageJoin(code.toStdString(), username.toStdString());
 }
 
-//go back to change name
-
-
-
 void Widget::on_changename_clicked()
 {
     navigator->goToWelcomePage();
 }
 
-
-
 void Widget::on_getfile_clicked()
 {
     throw "not implemented upload file yet";
 }
-
-
 
 void Widget::on_newpage_clicked()
 {

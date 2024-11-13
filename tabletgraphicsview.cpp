@@ -24,6 +24,7 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
     // Initialize current_path with a new QPainterPath
     auto current_path = QPainterPath(scenePos);
 
+
     switch (current_transform)
     {
     case (CREATE):
@@ -85,6 +86,10 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
 
 void TabletGraphicsView::handleMove(QPointF position, int id)
 {
+    if (current_page_id == 0)
+    {
+        return;
+    }
     // qDebug() << "Touch moved to:" << position << "with ID:" << id;
     // only care about 1 touch
     if (id != currentTouchId)
@@ -112,7 +117,10 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
 
 void TabletGraphicsView::handleRelease(QPointF position, int id)
 {
-
+    if (current_page_id == 0)
+    {
+        return;
+    }
     // qDebug() << "Touch released at:" << position << "with ID:" << id;
     // only care about 1 touch
     if (id != currentTouchId)

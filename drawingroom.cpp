@@ -1,5 +1,6 @@
 #include "drawingroom.h"
 #include "AppNavigator.hpp"
+#include "RandomIdGenerator.hpp"
 #include "ui_drawingroom.h"
 #include "widget.h"
 #include <QTabBar> // Add this line
@@ -32,6 +33,12 @@ drawingRoom::drawingRoom(QWidget *parent)
     , ui(new Ui::drawingRoom)
 {
     ui->setupUi(this);
+    no_page_scene.addSimpleText(
+        "Add a page to start!",
+        QFont("Helvetica", 30));
+
+    ui->graphics->setScene(&no_page_scene);
+
     ui->collapse->setCursor(Qt::PointingHandCursor);
 
 
@@ -538,32 +545,6 @@ void drawingRoom::initialize(std::string initial_room)
 }
 
 
-// void RoomPage::on_create_page_clicked()
-// {
-//     nlohmann::json json;
-//     uint64_t new_id = IDGenerator::newID();
-//     state.createInsertPageEvent(json, ui->graphics->current_page_id, new_id);
-//     ui->graphics->ws_handler->sendEvent(json);
-//     state.applyInsertPageEvent(json);
-//     state.manipulatePage(new_id, [this](Page &page)
-//                          { ui->graphics->displayScene(page.scene); });
-//     ui->graphics->current_page_id = new_id;
-//     ui->page_label->setText("Page: " + QString::number(new_id));
-// }
-
-
-// void drawingRoom::on_delete_page_clicked()
-// {
-//     // if after deleting page there are no pages left set scene to temporary scene
-//     uint64_t current_page_id = ui->graphics->current_page_id;
-
-//     nlohmann::json json;
-//     state.createDeletePageEvent(json, current_page_id);
-//     ui->graphics->ws_handler->sendEvent(json);
-//     handleDeletePageUIChange(current_page_id);
-//     state.applyDeletePageEvent(json);
-// }
-
 void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
     // nothing for now
 
@@ -576,34 +557,32 @@ void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
 };
 
 void drawingRoom::handleDeletePageUIChange(uint64_t page_id) {
-//     uint64_t current_page_id = ui->graphics->current_page_id;
-//     bool go_to_empty_page = false;
-//     uint64_t page_id_to_go_to;
-//     uint64_t prev_page_id;
-//     uint64_t next_page_id;
-//     // move user to previous page
-//     // if there is no prev page move to next page existing
-//     // otherwise show empty page
-//     if (state.getPrevPageId(current_page_id, prev_page_id)) {
-//         page_id_to_go_to = prev_page_id;
-//     } else if (state.getNextPageId(current_page_id, next_page_id)) {
-//         page_id_to_go_to = next_page_id;
-//     } else {
-//         go_to_empty_page = true;
-// }
+    uint64_t current_page_id = ui->graphics->current_page_id;
+    bool go_to_empty_page = false;
+    uint64_t page_id_to_go_to;
+    uint64_t prev_page_id;
+    uint64_t next_page_id;
+    // move user to previous page
+    // if there is no prev page move to next page existing
+    // otherwise show empty page
+    if (state.getPrevPageId(current_page_id, prev_page_id)) {
+        page_id_to_go_to = prev_page_id;
+    } else if (state.getNextPageId(current_page_id, next_page_id)) {
+        page_id_to_go_to = next_page_id;
+    } else {
+        go_to_empty_page = true;
+}
 
-//     if (go_to_empty_page) {
-//         ui->graphics->current_page_id = 0;
-//         ui->graphics->setScene(&no_page_scene);
-//         ui->page_label->setText("Page: ");
-//         return;
-//     }
+    if (go_to_empty_page) {
+        ui->graphics->current_page_id = 0;
+        ui->graphics->setScene(&no_page_scene);
+        return;
+    }
 
-//     state.manipulatePage(page_id_to_go_to, [this](Page &page)
-//                          { ui->graphics->displayScene(page.scene); });
+    state.manipulatePage(page_id_to_go_to, [this](Page &page)
+                         { ui->graphics->displayScene(page.scene); });
 
-//     ui->graphics->current_page_id = page_id_to_go_to;
-//     ui->page_label->setText("Page: " + QString::number(page_id_to_go_to));
+    ui->graphics->current_page_id = page_id_to_go_to;
 };
 
 // void drawingRoom::on_output_room_clicked()
@@ -621,4 +600,55 @@ void drawingRoom::handleDeletePageUIChange(uint64_t page_id) {
 //     navigator->goToHomepage();
 // }
 
+
+void drawingRoom::on_create_page_clicked()
+{
+    nlohmann::json json;
+    uint64_t new_id = IDGenerator::newID();
+    state.createInsertPageEvent(json, ui->graphics->current_page_id, new_id);
+    ui->graphics->ws_handler->sendEvent(json);
+    state.applyInsertPageEvent(json);
+    state.manipulatePage(new_id, [this](Page &page)
+                         { ui->graphics->displayScene(page.scene); });
+    ui->graphics->current_page_id = new_id;
+}
+
+
+void drawingRoom::on_delete_page_clicked()
+{
+    // if after deleting page there are no pages left set scene to temporary scene
+    uint64_t current_page_id = ui->graphics->current_page_id;
+
+    nlohmann::json json;
+    state.createDeletePageEvent(json, current_page_id);
+    ui->graphics->ws_handler->sendEvent(json);
+    handleDeletePageUIChange(current_page_id);
+    state.applyDeletePageEvent(json);
+}
+
+void drawingRoom::on_previous_page_clicked()
+{
+    uint64_t prev_page_id;
+    if (!state.getPrevPageId(ui->graphics->current_page_id, prev_page_id))
+    {
+        return;
+    }
+    state.manipulatePage(prev_page_id, [this](Page &page)
+                         { ui->graphics->displayScene(page.scene); });
+    ui->graphics->current_page_id = prev_page_id;
+}
+
+
+void drawingRoom::on_next_page_clicked()
+{
+    // find the current page in the list
+    uint64_t next_page_id;
+    if (!state.getNextPageId(ui->graphics->current_page_id, next_page_id))
+    {
+        return;
+    }
+    state.manipulatePage(next_page_id, [this](Page &page)
+                         { ui->graphics->displayScene(page.scene); });
+    ui->graphics->current_page_id = next_page_id;
+}
 

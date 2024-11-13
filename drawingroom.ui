@@ -217,7 +217,7 @@ border-radius: 20px;
             <item>
              <widget class="QTabWidget" name="sidebartabs_2">
               <property name="styleSheet">
-               <string notr="true">background-color: transparent;</string>
+               <string notr="true"/>
               </property>
               <property name="currentIndex">
                <number>0</number>
@@ -228,7 +228,54 @@ border-radius: 20px;
                </attribute>
                <layout class="QVBoxLayout" name="verticalLayout_5">
                 <item>
-                 <widget class="QWidget" name="widget_3" native="true"/>
+                 <widget class="QWidget" name="widget_3" native="true">
+                  <layout class="QVBoxLayout" name="verticalLayout_7">
+                   <item>
+                    <widget class="QPushButton" name="create_page">
+                     <property name="styleSheet">
+                      <string notr="true">color: #000000;
+background-color: #FFFFFF;</string>
+                     </property>
+                     <property name="text">
+                      <string>Create Page</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="delete_page">
+                     <property name="styleSheet">
+                      <string notr="true">color: #000000;
+background-color: #FFFFFF;</string>
+                     </property>
+                     <property name="text">
+                      <string>Delete Page</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="previous_page">
+                     <property name="styleSheet">
+                      <string notr="true">color: #000000;
+background-color: #FFFFFF;</string>
+                     </property>
+                     <property name="text">
+                      <string>Previous Page</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="next_page">
+                     <property name="styleSheet">
+                      <string notr="true">color: #000000;
+background-color: #FFFFFF;</string>
+                     </property>
+                     <property name="text">
+                      <string>Next Page</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                </layout>
               </widget>
