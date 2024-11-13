@@ -1,4 +1,5 @@
 #include "widget.h"
+#include "AppNavigator.hpp"
 #include "ui_widget.h"
 #include "drawingroom.h"
 #include <QLabel>
@@ -129,19 +130,7 @@ void Widget::on_codeEnter_clicked()
                    ui->lineEdit_8->text() +
                    ui->lineEdit_9->text();
     QString name = ui->name->text();
-    QString initial = ui->name->text().left(1);
-    QString possessiveName = name + "'s Room";
-    drawingRoom *joinroom = new drawingRoom();
-    joinroom->setCodeLabel(code);  // Calls a method in drawingRoom to update the label
-    joinroom->setNameLabel(possessiveName);  // Calls setNameLabel in Widget
-    joinroom->setUser(initial);
-
-
-    joinroom->show();
-
-
-    // Close the main window
-    this->close();
+    navigator->goToRoomPageJoin(code.toStdString(), username.toStdString());
 }
 
 //go back to change name
@@ -150,33 +139,21 @@ void Widget::on_codeEnter_clicked()
 
 void Widget::on_changename_clicked()
 {
-    NewUser *changename = new NewUser();
-    changename->show();
-    // Close the main window
-    this->close();
+    navigator->goToWelcomePage();
 }
 
 
 
 void Widget::on_getfile_clicked()
 {
-    drawingRoom *newfile = new drawingRoom();
-    newfile->show();
-
-    // Close the main window
-    this->close();
+    throw "not implemented upload file yet";
 }
 
 
 
 void Widget::on_newpage_clicked()
 {
-    drawingRoom *newpage = new drawingRoom();
-    newpage->show();
-
-    // Close the main window
-    this->close();
-
+    throw "not implemented new page yet";
 }
 
 void Widget::setUsername(const QString& username) {

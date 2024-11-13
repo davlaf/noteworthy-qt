@@ -1,4 +1,5 @@
 #include "newuser.h"
+#include "AppNavigator.hpp"
 #include "ui_newuser.h"
 #include "widget.h"
 #include <QMessageBox>  // Include for message box
@@ -31,6 +32,7 @@ void NewUser::on_button_clicked()
         msgBox.setStyleSheet("QLabel { color: white; }");  // Sets the text color in QMessageBox to black
         msgBox.setText("Please Enter a Name");
         msgBox.exec();
+        // TODO: remove this
 
 
     } else {
@@ -38,12 +40,7 @@ void NewUser::on_button_clicked()
         QString text = ui->lineEdit->text();
 
         // If the line edit has text, open the second window
-        Widget *roomwait = new Widget();
-        roomwait->setLabelText(text);  // Set the text on the second window's label
-        roomwait->show();
-
-        // Close the main window
-        this->close();
+        navigator->goToHomepage(text);
     }
 }
 

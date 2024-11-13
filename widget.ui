@@ -551,6 +551,12 @@ font: 35pt;
      <layout class="QHBoxLayout" name="horizontalLayout_6">
       <item>
        <widget class="QLabel" name="label_5">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="font">
          <font>
           <pointsize>35</pointsize>
@@ -570,14 +576,25 @@ font: 35pt;
        <widget class="QLabel" name="error">
         <property name="font">
          <font>
-          <pointsize>35</pointsize>
+          <pointsize>25</pointsize>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
+        <property name="layoutDirection">
+         <enum>Qt::LayoutDirection::LeftToRight</enum>
+        </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(157, 1, 9);</string>
+         <string notr="true">color: rgba(0, 0, 0, 0.7);
+font: 25pt;
+border-radius:  50px;
+</string>
         </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
        </widget>
       </item>

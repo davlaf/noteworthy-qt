@@ -1,4 +1,5 @@
 #include "drawingroom.h"
+#include "AppNavigator.hpp"
 #include "ui_drawingroom.h"
 #include "widget.h"
 #include <QTabBar> // Add this line
@@ -345,19 +346,7 @@ void drawingRoom::setButtonIconWithColor(QPushButton *button, const QString &svg
 
 void drawingRoom::on_leaveRoom_clicked()
 {
-
-    QString nameText = ui->name->text();
-    QString modifiedName = nameText;
-    QString suffix = "'s Room";
-
-    if (nameText.endsWith(suffix)) {
-        modifiedName = nameText.left(nameText.length() - suffix.length());
-    }
-    Widget *newroom = new Widget();
-    newroom->show();
-    newroom->setLabelText(modifiedName);
-    this->close();
-
+    navigator->goToHomepage(QString::fromStdString(user_id));
 }
 
 

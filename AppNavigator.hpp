@@ -29,8 +29,6 @@ public:
     NewUser welcome_page;
     Widget homepage;
     drawingRoom room_page;
-
-
     LoadingRoomPage loading_room_page;
 
     void goToWelcomePage() {
@@ -89,6 +87,9 @@ public:
         state.room_id = room_id;
         room_page.user_id = user_id;
         room_page.room_id = room_id;
+        room_page.setCodeLabel(QString::fromStdString(room_id));
+        room_page.setNameLabel(QString::fromStdString(user_id)+"'s Room");
+        room_page.setUser(QString::fromStdString(user_id).at(0));
 
         fetchRoom(room_id, [room_id, user_id, this](std::string string, RoomHTTPCodes code){
             // epic
@@ -137,9 +138,8 @@ public:
         QNetworkReply *reply = manager.get(request);
 
         QObject::connect(reply, &QNetworkReply::finished, [this, reply, onReply]() {
-
             QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-            if (!statusCode.isValid()) {
+            if (!statusCode.isValid() || statusCode.toInt() >= 500) {
                 homepage.setErrorText("Noteworthy server not online, please try again later");
                 qDebug() << "HTTP Status Code not available";
                 return;
