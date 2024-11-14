@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Homepage.hpp"
-#include "RoomPage.hpp"
-#include "WelcomePage.hpp"
 #include "RoomState.hpp"
 #include "loadingroompage.h"
 #include <QCoreApplication>

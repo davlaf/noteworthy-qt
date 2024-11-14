@@ -33,15 +33,6 @@ find_package(Qt6 REQUIRED COMPONENTS Svg)
 
 set(PROJECT_SOURCES
         main.cpp
-
-
-
-
-
-
-
-
-
         loadingroompage.cpp
         loadingroompage.h  
         loadingroompage.ui
@@ -55,8 +46,6 @@ set(PROJECT_SOURCES
         drawingroom.cpp
         drawingroom.h
         drawingroom.ui
-
-
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
