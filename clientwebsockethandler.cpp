@@ -18,8 +18,8 @@ void ClientWebSocketHandler::openConnection()
 {
     QWebSocketHandshakeOptions options;
     options.setSubprotocols({"echo-protocol"});
-    webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
-    // webSocket.open(QUrl("ws://localhost:8081/"), options);
+    // webSocket.open(QUrl("wss://nw-ws.howdoesthiseven.work/"), options);
+    webSocket.open(QUrl("ws://localhost:8081/"), options);
 }
 
 void ClientWebSocketHandler::onConnected()

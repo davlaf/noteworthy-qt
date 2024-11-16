@@ -121,8 +121,8 @@ public:
         const std::string& room_id,
         const std::function<void(std::string, RoomHTTPCodes)> &onReply,
         const std::string password = "") {
-        // QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms/"+room_id));
-        QUrl url(QString::fromStdString("https://noteworthy.howdoesthiseven.work/v1/rooms/"+room_id));
+        QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms/"+room_id));
+        // QUrl url(QString::fromStdString("https://noteworthy.howdoesthiseven.work/v1/rooms/"+room_id));
         QNetworkRequest request(url);
 
         // Set the authorization header

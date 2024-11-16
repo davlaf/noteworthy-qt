@@ -549,9 +549,25 @@ void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
     // nothing for now
 
     // get the page
-    state.manipulatePage(page_id, [](Page &page){
+    state.manipulatePage(page_id, [this](Page &page){
         // scroll view in the slides tab
         // create a widget with rounded corners and a border and inside is a QGraphicsView
+        ClickableGraphicsView* tempThumbnail = new ClickableGraphicsView;
+        page.thumbnail = tempThumbnail;
+        page.thumbnail->setMinimumSize(0, 0);
+        page.thumbnail->setMaximumSize(16777215, 16777215);
+        page.thumbnail->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        page.thumbnail->setStyleSheet("background-color: white; "
+                                       "border: 3px solid black; "
+                                       "border-radius: 15px");
+        page.thumbnail->resize(ui->widget_3->width(), (637/951)*ui->widget_3->width());
+
+        ThumbnailList.append(page.thumbnail); // add thumbnail to list of thumbnails
+
+        //int insertPosition = ui->widget_3->layout()->indexOf(ui->create_page) - 1;
+        //ui->widget_3->layout()->insertWidget(rectangleWidget);
+        ui->widget_3->layout()->addWidget(page.thumbnail);
+        //connect(page.thumbnail, &SenderClass::signalName, receiverObject, &ReceiverClass::slotName);
 
     });
 };
@@ -607,7 +623,7 @@ void drawingRoom::on_create_page_clicked()
     uint64_t new_id = IDGenerator::newID();
     state.createInsertPageEvent(json, ui->graphics->current_page_id, new_id);
     ui->graphics->ws_handler->sendEvent(json);
-    state.applyInsertPageEvent(json);
+    ui->graphics->ws_handler->handleEvent(json);
     state.manipulatePage(new_id, [this](Page &page)
                          { ui->graphics->displayScene(page.scene); });
     ui->graphics->current_page_id = new_id;
@@ -622,8 +638,7 @@ void drawingRoom::on_delete_page_clicked()
     nlohmann::json json;
     state.createDeletePageEvent(json, current_page_id);
     ui->graphics->ws_handler->sendEvent(json);
-    handleDeletePageUIChange(current_page_id);
-    state.applyDeletePageEvent(json);
+    ui->graphics->ws_handler->handleEvent(json);
 }
 
 void drawingRoom::on_previous_page_clicked()

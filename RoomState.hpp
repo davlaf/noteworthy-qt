@@ -8,6 +8,7 @@
 #include <mutex>
 #ifdef NOTEWORTHY_QT
 #include <qgraphicsscene.h>
+#include <clickablegraphicsview.h>
 #endif
 
 #include "nlohmann/ordered_map.hpp"
@@ -16,6 +17,7 @@ class Page
 {
 public:
     uint64_t page_id;
+    ClickableGraphicsView *thumbnail;
 #ifdef NOTEWORTHY_QT
     std::shared_ptr<QGraphicsScene> scene = std::make_shared<QGraphicsScene>();
 #endif
