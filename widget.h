@@ -2,7 +2,7 @@
 #define WIDGET_H
 
 #include <QWidget>
-
+#include <QLineEdit>
 
 
 QT_BEGIN_NAMESPACE
@@ -26,6 +26,10 @@ public:
     QString username;
 
     void setErrorText(const QString& error);
+    QList<QLineEdit *> lineEdits;  // List of line edits in correct order
+
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
 
 
 private slots:
@@ -46,6 +50,8 @@ private slots:
     void on_getfile_clicked();
 
     void on_newpage_clicked();
+
+
 
 private:
     Ui::Widget *ui;

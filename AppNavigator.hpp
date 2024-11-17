@@ -72,7 +72,9 @@ public:
     };
 
     void goToLoadingRoomPage(const std::string& room_id, const std::string& user_id) {
+
         loading_room_page.room_id = room_id;
+        loading_room_page.setNameLabel(QString::fromStdString(user_id));
         loading_room_page.user_id = user_id;
         loading_room_page.show();
         homepage.hide();

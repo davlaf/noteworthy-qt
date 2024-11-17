@@ -37,4 +37,6 @@ void LoadingRoomPage::on_password_textChanged(const QString &arg1)
 {
     ui->error->setText("");
 }
-
+void LoadingRoomPage::setNameLabel(const QString &text) {
+    ui->name->setText(text);
+}

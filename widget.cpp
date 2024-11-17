@@ -6,6 +6,7 @@
 #include <QRegularExpression>
 #include <QRegularExpressionValidator> // For QRegularExpressionValidator
 #include "newuser.h"
+#include <QKeyEvent>
 
 
 
@@ -36,9 +37,17 @@ Widget::Widget(QWidget *parent)
     ui->changename->setCursor(Qt::PointingHandCursor);
     ui->getfile->setCursor(Qt::PointingHandCursor);
 
+    lineEdits = {ui->lineEdit_5, ui->lineEdit_6, ui->lineEdit_7, ui->lineEdit_8, ui->lineEdit_9};
 
-
+    // Install event filters on all line edits
+    for (QLineEdit *lineEdit : lineEdits) {
+        lineEdit->installEventFilter(this);
+    }
 }
+
+
+
+
 
 Widget::~Widget()
 {
@@ -162,3 +171,28 @@ void Widget::setUsername(const QString& username) {
 void Widget::setErrorText(const QString& error) {
     ui->error->setText(error);
 }
+
+
+
+
+bool Widget::eventFilter(QObject *watched, QEvent *event) {
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event); // Safely cast after including QKeyEvent
+        if (keyEvent->key() == Qt::Key_Backspace) {
+            for (int i = 0; i < lineEdits.size(); ++i) {
+                if (watched == lineEdits[i] && lineEdits[i]->text().isEmpty() && i > 0) {
+                    lineEdits[i - 1]->setFocus();
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Pass unhandled events to the base class
+    return QWidget::eventFilter(watched, event);
+}
+
+
+
+
+

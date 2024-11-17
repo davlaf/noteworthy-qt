@@ -17,7 +17,7 @@ public:
     ~LoadingRoomPage();
     std::string room_id;
     std::string user_id;
-
+    void setNameLabel(const QString &name);
     void clear_password() {
         ui->password->clear();
     }
