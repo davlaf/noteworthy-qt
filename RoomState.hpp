@@ -17,7 +17,6 @@ class Page
 {
 public:
     uint64_t page_id;
-    ClickableGraphicsView *thumbnail;
 #ifdef NOTEWORTHY_QT
     std::shared_ptr<QGraphicsScene> scene = std::make_shared<QGraphicsScene>();
 #endif
@@ -233,6 +232,15 @@ public:
         }
         first_page_id = page_order.front();
         return true;
+    }
+
+    std::shared_ptr<QGraphicsScene> getScene(uint64_t &page_id){
+        if(page_map.count(page_id)>0){
+            return page_map.at(page_id)->scene;
+        }else{
+            qDebug() << "Page doesn't exist while getting scene" ;
+            return NULL;
+        }
     }
 
 private:

@@ -195,6 +195,7 @@ drawingRoom::drawingRoom(QWidget *parent)
     ui->erase->setIcon(icon11);
     ui->erase->setIconSize(QSize(20, 20)); // Set icon size if needed
 
+    ui->scrollAreaWidgetContents->setLayout(ui->thumbnailScrollableLayout);
 
 
 
@@ -210,6 +211,7 @@ void drawingRoom::setNameLabel(const QString &name) {
 drawingRoom::~drawingRoom()
 {
     delete ui;
+    thumbnailList.clear();
 }
 
 void drawingRoom::on_collapse_clicked()
@@ -544,35 +546,105 @@ void drawingRoom::initialize(std::string initial_room)
     //ui->page_label->setText("Page: " + QString::number(first_page_id));
 }
 
+void drawingRoom::pageSelection(){
+
+    std::_List_iterator<std::pair<uint64_t, ClickableGraphicsView*>> index = thumbnailList.end();
+    for (auto it = thumbnailList.begin(); it != thumbnailList.end(); ++it) {
+        if(it->second == sender()) {
+            index = it;
+            break;
+        }
+    }
+    ui->graphics->current_page_id = index->first;
+
+    ui->graphics->displayScene(state.getScene(index->first));
+
+}
 
 void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
     // nothing for now
+    // assuming you have a list of thumbnails in the drawing room
+    // add it to the list a the specified position
+    // std::list<std::pair<uint64_t, std::shared_ptr<ClickableGraphicsView>>> page_list;
+    // iterate over all the pages ids until you find prev page id
+    // then std::list::insert the page at that position
+    // add the clickable graphics view to the scrollable list view
+
+    qDebug() << "Entering handleCreatePageUIChange, page ID:" << page_id;
 
     // get the page
-    state.manipulatePage(page_id, [this](Page &page){
+    state.manipulatePage(page_id, [this, page_id](Page &page){
+
+        qDebug() << "Entering manipulatePage, page ID:" << page_id;
+
+        uint64_t prev_page_id;
+        qDebug() << "Before getPrevPageId initiation, page ID:" << page_id;
+        if(state.getFirstPageId(prev_page_id)){
+            if(prev_page_id == page_id) prev_page_id = 0;
+        }
+
+
+        if(!thumbnailList.empty() && prev_page_id != 0){
+            if(thumbnailList.size() == 1){
+                if (!state.getFirstPageId(prev_page_id)) {
+                    qDebug() << "in FirstPage error message, page ID:" << page_id;
+                    throw std::runtime_error("Page not found!");
+                }
+            }else{
+                if (!state.getPrevPageId(page_id, prev_page_id)) {
+                    qDebug() << "in PrevPage error message, page ID:" << page_id;
+                    throw std::runtime_error("Page not found!");
+                }
+            }
+        }
         // scroll view in the slides tab
         // create a widget with rounded corners and a border and inside is a QGraphicsView
+        qDebug() << "Before tempThumbnail initiation, page ID:" << page_id;
         ClickableGraphicsView* tempThumbnail = new ClickableGraphicsView;
-        page.thumbnail = tempThumbnail;
-        page.thumbnail->setMinimumSize(0, 0);
-        page.thumbnail->setMaximumSize(16777215, 16777215);
-        page.thumbnail->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        page.thumbnail->setStyleSheet("background-color: white; "
+        tempThumbnail->setMinimumSize(0, 0);
+        tempThumbnail->setMaximumSize(16777215, 16777215);
+        tempThumbnail->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+        tempThumbnail->setStyleSheet("background-color: white; "
                                        "border: 3px solid black; "
                                        "border-radius: 15px");
-        page.thumbnail->resize(ui->widget_3->width(), (637/951)*ui->widget_3->width());
+        tempThumbnail->resize(0.7*ui->scrollArea->width(), static_cast<int>(0.7*(637.0 / 951.0) * ui->scrollArea->width()));
 
-        ThumbnailList.append(page.thumbnail); // add thumbnail to list of thumbnails
+        qDebug() << "Before Iterator, page ID:" << page_id;
+        std::pair<uint64_t, ClickableGraphicsView*> tempPair(page_id, tempThumbnail);
+        if(prev_page_id == 0){
+            thumbnailList.push_front(tempPair);
+        }else{
+            std::_List_iterator<std::pair<uint64_t, ClickableGraphicsView*>> index = thumbnailList.end();
+
+            for (auto it = thumbnailList.begin(); it != thumbnailList.end(); ++it) {
+                if(it->first == prev_page_id) {
+                    index = it;
+                    break;
+                }
+                // You can now work with page_id and thumbnail
+            }
+            if (index != thumbnailList.end()) {
+                ++index;
+            }
+
+            thumbnailList.insert(index, tempPair);
+        }
+        qDebug() << "After Iterator, page ID:" << page_id;
 
         //int insertPosition = ui->widget_3->layout()->indexOf(ui->create_page) - 1;
         //ui->widget_3->layout()->insertWidget(rectangleWidget);
-        ui->widget_3->layout()->addWidget(page.thumbnail);
-        //connect(page.thumbnail, &SenderClass::signalName, receiverObject, &ReceiverClass::slotName);
+        ui->thumbnailScrollableLayout->layout()->addWidget(tempThumbnail);
+        connect(tempThumbnail, &ClickableGraphicsView::clicked, this, &drawingRoom::pageSelection);
 
     });
 };
-
 void drawingRoom::handleDeletePageUIChange(uint64_t page_id) {
+    // iterate over list of std::list<std::pair<uint64_t, std::shared_ptr<ClickableGraphicsView>>>
+    // until you find the correct page
+    // remove it from the qt scrollable view
+    // remove it from this list
+
+
     uint64_t current_page_id = ui->graphics->current_page_id;
     bool go_to_empty_page = false;
     uint64_t page_id_to_go_to;

@@ -24,7 +24,8 @@ public:
     std::string user_id;
     std::string room_id;
     QGraphicsScene no_page_scene;
-    QList<ClickableGraphicsView *> ThumbnailList;
+
+    std::list<std::pair<uint64_t, ClickableGraphicsView*>> thumbnailList;
 
     void initialize(std::string initial_room = "[]");
 
