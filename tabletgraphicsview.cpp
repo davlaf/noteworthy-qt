@@ -148,11 +148,10 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
     current_stroke = nullptr;
     current_stroke_id = 0;
 
-    QGraphicsScene* tempScene = scene();
-    currentThumbnail->fitInView(tempScene->sceneRect(), Qt::KeepAspectRatio);
-    currentThumbnail->setScene(tempScene);
 
-    delete tempScene;
+    //currentThumbnail->fitInView(scene()->sceneRect(), Qt::KeepAspectRatio);
+    currentThumbnail->setScene(scene());
+
 
 }
 

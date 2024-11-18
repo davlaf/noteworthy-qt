@@ -641,6 +641,7 @@ void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
         //int insertPosition = ui->widget_3->layout()->indexOf(ui->create_page) - 1;
         //ui->widget_3->layout()->insertWidget(rectangleWidget);
         ui->thumbnailScrollableLayout->layout()->addWidget(tempThumbnail);
+        currentThumbnail = tempThumbnail;
         connect(tempThumbnail, &ClickableGraphicsView::clicked, this, &drawingRoom::pageSelection);
 
     });
@@ -650,6 +651,22 @@ void drawingRoom::handleDeletePageUIChange(uint64_t page_id) {
     // until you find the correct page
     // remove it from the qt scrollable view
     // remove it from this list
+
+    std::_List_iterator<std::pair<uint64_t, ClickableGraphicsView*>> index = thumbnailList.end();
+    for (auto it = thumbnailList.begin(); it != thumbnailList.end(); ++it) {
+        if(it->first == page_id) {
+            index = it;
+            break;
+        }
+    }
+
+    if(index!=thumbnailList.end()){
+        ui->thumbnailScrollableLayout->layout()->removeWidget(index->second);
+        delete index->second;
+        thumbnailList.erase(index);
+    }else{
+        qDebug() << "thumbnail to be deleted does note exist";
+    }
 
 
     uint64_t current_page_id = ui->graphics->current_page_id;
@@ -678,6 +695,20 @@ void drawingRoom::handleDeletePageUIChange(uint64_t page_id) {
                          { ui->graphics->displayScene(page.scene); });
 
     ui->graphics->current_page_id = page_id_to_go_to;
+
+    if(thumbnailList.empty()){
+        currentThumbnail = NULL;
+    }else{
+        for (auto it = thumbnailList.begin(); it != thumbnailList.end(); ++it) {
+            if(it->first == page_id_to_go_to) {
+                index = it;
+                break;
+            }
+        }
+        currentThumbnail = index->second;
+    }
+
+
 };
 
 // void drawingRoom::on_output_room_clicked()
