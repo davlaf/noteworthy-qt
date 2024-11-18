@@ -369,6 +369,8 @@ void drawingRoom::on_draw_clicked()
                              "border-radius: 16px;"
                              "border: none;"
                              "}");
+
+    ui->graphics->current_transform = CREATE;
 }
 
 
@@ -384,6 +386,8 @@ void drawingRoom::on_erase_clicked()
                             "border-radius: 16px;"
                             "border: none;"
                             "}");
+
+    ui->graphics->current_transform = DELETE;
 }
 
 
@@ -509,6 +513,7 @@ void drawingRoom::initialize(std::string initial_room)
     ui->graphics->ws_handler->openConnection();
     ui->graphics->setScene(&no_page_scene);
     ui->graphics->user_id = user_id;
+    ui->graphics->resetTransform();
 
     ui->code->setText(QString::fromStdString(room_id));
 

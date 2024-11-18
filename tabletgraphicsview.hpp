@@ -11,6 +11,7 @@
 #include <QGraphicsPathItem>
 #include <qwebsocket.h>
 #include "EventTypeEnums.hpp"
+#include "TouchState.hpp"
 
 class TabletGraphicsView : public QGraphicsView
 {
@@ -25,13 +26,16 @@ public:
         setMouseTracking(true);                 // Enable tracking mouse movement
         setFocusPolicy(Qt::StrongFocus); // Allows mouse and keyboard events
         setAttribute(Qt::WA_Hover);             // Enable hover events
+        setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+
 
         this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         // i dont know why I have to subtract 5
-        this->setSceneRect(0, 0, this->width() - 5, this->height() - 5);
+        this->setSceneRect(0, 0, 1000, 700);
 
         this->pen = QColor{255, 50, 50};
+
         this->show();
     };
 
@@ -42,24 +46,31 @@ public:
     {
 
         this->setScene(scene.get());
+        qDebug() << "width:" << this->width();
+        qDebug() << "height:" << this->height();
     }
+
+    QPointF centerPoint;
 
     uint64_t current_page_id = 0;
     std::string user_id;
 
+    enum EventObjectType current_object = STROKE;
+    enum EventType current_transform = CREATE;
+
 private:
     void resizeEvent(QResizeEvent *event) override;
-    int currentTouchId;
     void handleTouch(QPointF position, int id);
     void handleRelease(QPointF position, int id);
     void handleMove(QPointF position, int id);
 
-    enum EventObjectType current_object = STROKE;
-    enum EventType current_transform = CREATE;
+    TouchState touch_state;
+    void updateViewFromTouchState();
 
     QPen pen;
 
     std::unique_ptr<Stroke> current_stroke;
+    std::unique_ptr<QPainterPath> erase_path;
     uint64_t current_stroke_id;
 
 protected:
@@ -102,7 +113,6 @@ protected:
         case QEvent::MouseButtonRelease:
         {
             // Handle mouse events
-            qDebug() << "mouse!";
             QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
             QPointF pos = mouseEvent->position();
             int id = 0; // Use 0 for mouse since there's usually only one pointer
