@@ -55,5 +55,8 @@
         <file>png/axis (2).svg</file>
         <file>png/axis (1).svg</file>
         <file>png/Arrow 1.svg</file>
+        <file>png/upload_file.svg</file>
+        <file>png/delete.svg</file>
+        <file>png/add_circle.svg</file>
     </qresource>
 </RCC>

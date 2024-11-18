@@ -33,6 +33,9 @@
         <file>svg/select_window_2.svg</file>
         <file>svg/settings.svg</file>
         <file>svg/shapes.svg</file>
+        <file>png/upload_file.svg</file>
+        <file>png/delete.svg</file>
+        <file>png/add_circle.svg</file>
     </qresource>
     <qresource prefix="/png">
         <file>png/Star 1.svg</file>
@@ -55,5 +58,8 @@
         <file>png/axis (2).svg</file>
         <file>png/axis (1).svg</file>
         <file>png/Arrow 1.svg</file>
+        <file>png/upload_file.svg</file>
+        <file>png/delete.svg</file>
+        <file>png/add_circle.svg</file>
     </qresource>
 </RCC>

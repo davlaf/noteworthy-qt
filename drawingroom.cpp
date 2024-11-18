@@ -22,6 +22,9 @@
 #include <QIcon>
 #include <QPushButton>
 #include "RoomState.hpp"
+#include <QClipboard>
+#include <QApplication>
+
 
 
 
@@ -43,6 +46,9 @@ drawingRoom::drawingRoom(QWidget *parent)
     ui->graphics->setScene(&no_page_scene);
 
     ui->collapse->setCursor(Qt::PointingHandCursor);
+    ui->copyCode->setCursor(Qt::PointingHandCursor);
+
+
 
 
     // Initialize the timer for the cooldown
@@ -273,6 +279,19 @@ drawingRoom::drawingRoom(QWidget *parent)
     ui->shape9->setIcon(icon29);
     ui->shape9->setIconSize(QSize(100, 100));
 
+    QIcon icon30(":/png/png/delete.svg");
+    ui->setting1->setIcon(icon30);
+    ui->setting1->setIconSize(QSize(45, 45));
+
+    QIcon icon31(":/png/png/add_circle.svg");
+    ui->setting2->setIcon(icon31);
+    ui->setting2->setIconSize(QSize(45, 45));
+
+    QIcon icon32(":/png/png/upload_file.svg");
+    ui->setting3->setIcon(icon32);
+    ui->setting3->setIconSize(QSize(45, 45));
+
+
 }
 void drawingRoom::setNameLabel(const QString &name) {
     ui->name->setText(name);  // Set the label in Widget
@@ -459,6 +478,7 @@ void drawingRoom::on_erase_clicked()
                             "border-radius: 16px;"
                             "border: none;"
                             "}");
+
 }
 
 
@@ -725,5 +745,124 @@ void drawingRoom::on_next_page_clicked()
     state.manipulatePage(next_page_id, [this](Page &page)
                          { ui->graphics->displayScene(page.scene); });
     ui->graphics->current_page_id = next_page_id;
+}
+
+//add shape fucntionality once done
+void drawingRoom::on_shape1_clicked()
+{
+
+}
+
+
+void drawingRoom::on_shape2_clicked()
+{
+
+}
+
+
+void drawingRoom::on_shape3_clicked()
+{
+
+}
+
+
+void drawingRoom::on_shape4_clicked()
+{
+
+}
+
+
+void drawingRoom::on_shape5_clicked()
+{
+
+}
+
+
+void drawingRoom::on_shape6_clicked()
+{
+
+}
+
+
+void drawingRoom::on_shape7_clicked()
+{
+
+}
+
+
+void drawingRoom::on_shape8_clicked()
+{
+
+}
+
+
+void drawingRoom::on_shape9_clicked()
+{
+
+}
+
+
+//add code once symbols are implemented
+void drawingRoom::on_symbol1_clicked()
+{
+
+}
+
+
+void drawingRoom::on_symbol2_clicked()
+{
+
+}
+
+
+void drawingRoom::on_symbol3_clicked()
+{
+
+}
+
+
+void drawingRoom::on_symbol4_clicked()
+{
+
+}
+
+
+void drawingRoom::on_symbol5_clicked()
+{
+
+}
+
+
+void drawingRoom::on_symbol6_clicked()
+{
+
+}
+
+
+void drawingRoom::on_symbol7_clicked()
+{
+
+}
+
+
+void drawingRoom::on_symbol8_clicked()
+{
+
+}
+
+
+void drawingRoom::on_symbol9_clicked()
+{
+
+}
+
+
+void drawingRoom::on_copyCode_clicked()
+{
+    QString codeText = ui->code->text();
+
+    // Get the clipboard and set the text
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->setText(codeText);
 }
 

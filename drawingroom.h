@@ -68,6 +68,44 @@ private slots:
 
     void on_next_page_clicked();
 
+    void on_shape1_clicked();
+
+    void on_shape2_clicked();
+
+    void on_shape3_clicked();
+
+    void on_shape4_clicked();
+
+    void on_shape5_clicked();
+
+    void on_shape6_clicked();
+
+    void on_shape7_clicked();
+
+    void on_shape8_clicked();
+
+    void on_shape9_clicked();
+
+    void on_symbol1_clicked();
+
+    void on_symbol2_clicked();
+
+    void on_symbol3_clicked();
+
+    void on_symbol4_clicked();
+
+    void on_symbol5_clicked();
+
+    void on_symbol6_clicked();
+
+    void on_symbol7_clicked();
+
+    void on_symbol8_clicked();
+
+    void on_symbol9_clicked();
+
+    void on_copyCode_clicked();
+
 private:
     Ui::drawingRoom *ui;
     int lastWidth = 0;

@@ -28,12 +28,6 @@ void NewUser::on_button_clicked()
     // Check if the line edit is empty
     if (ui->lineEdit->text().isEmpty()) {
         // Show a message box prompting the user to enter text
-        QMessageBox msgBox;
-        msgBox.setStyleSheet("QLabel { color: white; }");  // Sets the text color in QMessageBox to black
-        msgBox.setText("Please Enter a Name");
-        msgBox.exec();
-        // TODO: remove this
-
 
     } else {
 
