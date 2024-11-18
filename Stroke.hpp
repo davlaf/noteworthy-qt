@@ -17,7 +17,7 @@ private:
 #ifdef NOTEWORTHY_QT
 public:
     QPainterPath path;
-    QGraphicsPathItem *path_item;
+    // QGraphicsPathItem *path_item;
 #endif
 
 public:
@@ -100,7 +100,9 @@ public:
 
 #ifdef NOTEWORTHY_QT
     Stroke(QPainterPath &path, QGraphicsPathItem *path_item)
-        : path(path), path_item(path_item) {};
+        : path(path) {
+        item = path_item;
+    };
 
     Stroke(QPainterPath &path) : path(path) {};
 
@@ -132,11 +134,11 @@ public:
     {
         updateQtPath();
         // it its a placeholder for a stroke in progress
-        if (path_item == nullptr)
+        if (item == nullptr)
         {
             return;
         }
-        path_item->setPath(path);
+        static_cast<QGraphicsPathItem*>(item)->setPath(path);
     }
 #endif
 };

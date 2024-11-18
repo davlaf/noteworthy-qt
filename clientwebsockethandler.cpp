@@ -29,6 +29,11 @@ void ClientWebSocketHandler::onConnected()
             this, &ClientWebSocketHandler::onTextMessageReceived);
 }
 
+void ClientWebSocketHandler::closed()
+{
+    qDebug() << "closed!!";
+}
+
 void ClientWebSocketHandler::onError(QAbstractSocket::SocketError error)
 {
     qDebug() << "WebSocket error occurred:" << webSocket.errorString();
@@ -179,7 +184,18 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json &event)
         {
             uint64_t object_id = event["object_id"];
             state.manipulatePage(event["page_id"], [object_id](Page &page)
-                                 { page.deleteObject(object_id); });
+                                 {
+                page.manipulateObject(object_id, [](CanvasObject& object){
+                    QGraphicsScene* scene = object.item->scene();
+                    if (scene) {
+                        scene->removeItem(object.item);
+                    }
+
+                    delete object.item;
+                    object.item = nullptr;
+                });
+                page.deleteObject(object_id);
+            });
             break;
         }
         default:

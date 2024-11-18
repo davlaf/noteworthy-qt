@@ -18,6 +18,10 @@ public:
     uint64_t page_id;
 #ifdef NOTEWORTHY_QT
     std::shared_ptr<QGraphicsScene> scene = std::make_shared<QGraphicsScene>();
+
+    uint64_t getObjectIdFromGraphicsItem(QGraphicsItem* item) {
+        return pointer_to_id_map.at(item);
+    }
 #endif
 
     std::unique_ptr<CanvasObject> deleteObject(uint64_t id)
@@ -31,7 +35,10 @@ public:
     void addObject(std::unique_ptr<CanvasObject> object)
     {
         std::lock_guard<std::mutex> lock(page_mutex);
-        object_map[object.get()->object_id] = std::move(object);
+#ifdef NOTEWORTHY_QT
+        pointer_to_id_map[object->item] = object->object_id;
+#endif
+        object_map[object->object_id] = std::move(object);
     }
 
     void
@@ -54,6 +61,9 @@ public:
 private:
     std::mutex page_mutex;
     nlohmann::ordered_map<uint64_t, std::unique_ptr<CanvasObject>> object_map;
+#ifdef NOTEWORTHY_QT
+    std::map<QGraphicsItem*, uint64_t> pointer_to_id_map;
+#endif
 };
 
 class RoomState

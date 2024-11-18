@@ -20,12 +20,12 @@ public:
     std::unique_ptr<CanvasObject> createCanvasObject(EventObjectType object_type, QGraphicsScene& scene, QColor color = QColor{255, 50, 50});
 
 signals:
-    void closed();
     void pageCreated(uint64_t page_id);
     void pageDeleted(uint64_t page_id);
 
 private Q_SLOTS:
     void onConnected();
+    void closed();
     void onTextMessageReceived(QString message);
     void onError(QAbstractSocket::SocketError error);
 
