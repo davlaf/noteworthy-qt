@@ -3,6 +3,7 @@
 #include <QWebSocketHandshakeOptions>
 #include "EventTypeEnums.hpp"
 #include "RandomIdGenerator.hpp"
+#include "drawingroom.h"
 
 #include "Stroke.hpp"
 
@@ -285,6 +286,12 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
 
     current_stroke = nullptr;
     current_stroke_id = 0;
+
+
+    //currentThumbnail->fitInView(scene()->sceneRect(), Qt::KeepAspectRatio);
+    // currentThumbnail->setScene(scene());
+
+
 }
 
 void TabletGraphicsView::resizeEvent(QResizeEvent *event)

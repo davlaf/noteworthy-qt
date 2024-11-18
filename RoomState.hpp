@@ -8,6 +8,7 @@
 #include <mutex>
 #ifdef NOTEWORTHY_QT
 #include <qgraphicsscene.h>
+#include <clickablegraphicsview.h>
 #endif
 
 #include "nlohmann/ordered_map.hpp"
@@ -241,6 +242,15 @@ public:
         }
         first_page_id = page_order.front();
         return true;
+    }
+
+    std::shared_ptr<QGraphicsScene> getScene(uint64_t &page_id){
+        if(page_map.count(page_id)>0){
+            return page_map.at(page_id)->scene;
+        }else{
+            qDebug() << "Page doesn't exist while getting scene" ;
+            return NULL;
+        }
     }
 
 private:

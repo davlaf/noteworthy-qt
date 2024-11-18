@@ -32,9 +32,24 @@ drawingRoom::drawingRoom(QWidget *parent)
 
     ui->sidebartabs_2->setCurrentIndex(0);
 
-    no_page_scene.addSimpleText(
-        "Add a page to start!",
-        QFont("Helvetica", 30));
+    no_page_scene.setSceneRect(0, 0, 1000, 700);
+    // Retrieve the default font set in main
+    QFont customFont = QApplication::font();
+    customFont.setPointSize(30); // Set font size
+
+    // Create the text item
+    QGraphicsTextItem *textItem = no_page_scene.addText("Add a page to start!", customFont);
+
+    // Set the text color to rgba(74, 160, 60, 1)
+    QColor textColor(74, 160, 60, 255); // RGBA with alpha fully opaque
+    textItem->setDefaultTextColor(textColor);
+
+    // Center the text item within the scene
+    QRectF textRect = textItem->boundingRect();
+    textItem->setPos(
+        (no_page_scene.sceneRect().width() - textRect.width()) / 2,        // Center horizontally
+        (no_page_scene.sceneRect().height() - 100 - textRect.height()) / 2 // Center vertically
+    );
 
     ui->graphics->setScene(&no_page_scene);
 
@@ -185,6 +200,8 @@ drawingRoom::drawingRoom(QWidget *parent)
     ui->erase->setIcon(icon11);
     ui->erase->setIconSize(QSize(20, 20)); // Set icon size if needed
 
+    ui->thumbnailScrollableLayout->setAlignment(Qt::AlignTop);
+    ui->scrollAreaWidgetContents->setLayout(ui->thumbnailScrollableLayout);
     // symbola icons
     QIcon icon12(":/png/png/capacitor.svg");
     ui->symbol1->setIcon(icon12);
@@ -278,6 +295,7 @@ void drawingRoom::setNameLabel(const QString &name)
 drawingRoom::~drawingRoom()
 {
     delete ui;
+    thumbnailList.clear();
 }
 
 void drawingRoom::on_collapse_clicked()
@@ -556,6 +574,17 @@ void drawingRoom::initialize(std::string initial_room)
     ui->graphics->setScene(&no_page_scene);
     ui->graphics->user_id = user_id;
     ui->graphics->resetTransform();
+    // clear layout
+    thumbnailList.clear();
+    while (QLayoutItem *item = ui->thumbnailScrollableLayout->takeAt(0))
+    {
+        if (QWidget *widget = item->widget())
+        {
+            widget->deleteLater(); // Schedule the widget for deletion
+        }
+        // not sure if this is necessary
+        // delete item; // Delete the layout item
+    }
 
     ui->code->setText(QString::fromStdString(room_id));
 
@@ -584,47 +613,165 @@ void drawingRoom::initialize(std::string initial_room)
         return;
     }
 
-    ui->graphics->current_page_id = first_page_id;
-    state.manipulatePage(first_page_id, [this](Page &page)
-                         { ui->graphics->displayScene(page.scene); });
-    // ui->page_label->setText("Page: " + QString::number(first_page_id));
+    select_page(first_page_id);
+}
+
+void drawingRoom::select_page(uint64_t page_id)
+{
+
+    auto it = std::find_if(
+        thumbnailList.begin(),
+        thumbnailList.end(),
+        [&page_id](const auto &pair)
+        { return pair.first == page_id; });
+
+    if (it == thumbnailList.end())
+    {
+        throw "page not found!";
+    }
+
+    ui->graphics->current_page_id = it->first;
+
+    ui->graphics->displayScene(state.getScene(it->first));
+
+    for (auto &thumbnail : thumbnailList)
+    {
+        thumbnail.second->setStyleSheet("background-color: white; "
+                                        "border: 3px solid rgba(174,243,163,1); "
+                                        "border-radius: 15px");
+    }
+    it->second->setStyleSheet("background-color: white; "
+                              "border: 3px solid rgba(74,160,60,1); "
+                              "border-radius: 15px");
+}
+
+std::shared_ptr<ClickableGraphicsView> drawingRoom::createThumbnail(std::shared_ptr<QGraphicsScene> scene)
+{
+    std::shared_ptr<ClickableGraphicsView> new_thumbnail = std::make_shared<ClickableGraphicsView>();
+    new_thumbnail->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+    new_thumbnail->scale(0.2, 0.2);
+    new_thumbnail->setScene(scene.get());
+
+    new_thumbnail->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    new_thumbnail->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    new_thumbnail->setMinimumSize(0, 170);
+    new_thumbnail->setMaximumSize(16777215, 170);
+    new_thumbnail->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    new_thumbnail->setStyleSheet("background-color: white; "
+                                 "border: 3px solid rgba(174,243,163,1); "
+                                 "border-radius: 15px");
+    return new_thumbnail;
 }
 
 void drawingRoom::handleCreatePageUIChange(uint64_t page_id)
 {
     // nothing for now
+    // assuming you have a list of thumbnails in the drawing room
+    // add it to the list a the specified position
+    // std::list<std::pair<uint64_t, std::shared_ptr<ClickableGraphicsView>>> page_list;
+    // iterate over all the pages ids until you find prev page id
+    // then std::list::insert the page at that position
+    // add the clickable graphics view to the scrollable list view
+
+    qDebug() << "Entering handleCreatePageUIChange, page ID:" << page_id;
 
     // get the page
-    state.manipulatePage(page_id, [](Page &page)
+    state.manipulatePage(page_id, [this, page_id](Page &page)
                          {
-                             // scroll view in the slides tab
-                             // create a widget with rounded corners and a border and inside is a QGraphicsView
+                             qDebug() << "Entering manipulatePage, page ID:" << page_id;
+
+                             auto new_thumbnail = createThumbnail(page.scene);
+
+                             uint64_t prev_page_id;
+                             qDebug() << "Before getPrevPageId initiation, page ID:" << page_id;
+                             size_t index = 0;
+
+                             if (!state.getPrevPageId(page_id, prev_page_id))
+                             {
+                                 prev_page_id = 0;
+                             }
+
+                             if (prev_page_id == 0)
+                             {
+                                 thumbnailList.push_front({page_id, new_thumbnail});
+                             }
+                             else
+                             {
+                                 auto it = std::find_if(
+                                     thumbnailList.begin(),
+                                     thumbnailList.end(),
+                                     [&prev_page_id](const auto &pair)
+                                     { return pair.first == prev_page_id; });
+
+                                 if (it == thumbnailList.end())
+                                 {
+                                     throw "page not found!";
+                                 }
+
+                                 index = std::distance(thumbnailList.begin(), std::next(it));
+                                 thumbnailList.insert(std::next(it), {page_id, new_thumbnail});
+                             }
+
+                             auto layout = ui->thumbnailScrollableLayout->layout();
+                             static_cast<QBoxLayout *>(layout)->insertWidget(index, new_thumbnail.get());
+
+                             connect(new_thumbnail.get(), &ClickableGraphicsView::clicked, this, [this, page_id]()
+                                     { select_page(page_id); });
+
+                             select_page(page_id);
                          });
 };
-
 void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
 {
+    // iterate over list of std::list<std::pair<uint64_t, std::shared_ptr<ClickableGraphicsView>>>
+    // until you find the correct page
+    // remove it from the qt scrollable view
+    // remove it from this list
+    if (ui->graphics->current_page_id == 0)
+    {
+        return;
+    }
+
+    // Find the thumbnail in the list
+    auto it = std::find_if(
+        thumbnailList.begin(),
+        thumbnailList.end(),
+        [&page_id](const auto &pair)
+        { return pair.first == page_id; });
+
+    if (it == thumbnailList.end())
+    {
+        throw "thumbnail to be deleted doesn't exist!!";
+    }
+
+    // Remove the widget from the UI and delete it
+    auto layout = ui->thumbnailScrollableLayout->layout();
+    layout->removeWidget(it->second.get());
+
+    it->second.reset(); // Explicitly reset the shared_ptr
+
+    // Erase the thumbnail from the list
+    thumbnailList.erase(it);
+
+    // Determine which page to navigate to next
     uint64_t current_page_id = ui->graphics->current_page_id;
-    bool go_to_empty_page = false;
-    uint64_t page_id_to_go_to;
-    uint64_t prev_page_id;
-    uint64_t next_page_id;
-    // move user to previous page
-    // if there is no prev page move to next page existing
-    // otherwise show empty page
+    uint64_t page_id_to_go_to = 0;
+    uint64_t prev_page_id, next_page_id;
+    bool go_to_empty_page = true;
+
     if (state.getPrevPageId(current_page_id, prev_page_id))
     {
         page_id_to_go_to = prev_page_id;
+        go_to_empty_page = false;
     }
     else if (state.getNextPageId(current_page_id, next_page_id))
     {
         page_id_to_go_to = next_page_id;
-    }
-    else
-    {
-        go_to_empty_page = true;
+        go_to_empty_page = false;
     }
 
+    // Handle the empty page scenario
     if (go_to_empty_page)
     {
         ui->graphics->current_page_id = 0;
@@ -632,10 +779,7 @@ void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
         return;
     }
 
-    state.manipulatePage(page_id_to_go_to, [this](Page &page)
-                         { ui->graphics->displayScene(page.scene); });
-
-    ui->graphics->current_page_id = page_id_to_go_to;
+    select_page(page_id_to_go_to);
 };
 
 // void drawingRoom::on_output_room_clicked()
@@ -658,7 +802,7 @@ void drawingRoom::on_create_page_clicked()
     uint64_t new_id = IDGenerator::newID();
     state.createInsertPageEvent(json, ui->graphics->current_page_id, new_id);
     ui->graphics->ws_handler->sendEvent(json);
-    state.applyInsertPageEvent(json);
+    ui->graphics->ws_handler->handleEvent(json);
     state.manipulatePage(new_id, [this](Page &page)
                          { ui->graphics->displayScene(page.scene); });
     ui->graphics->current_page_id = new_id;
@@ -672,8 +816,7 @@ void drawingRoom::on_delete_page_clicked()
     nlohmann::json json;
     state.createDeletePageEvent(json, current_page_id);
     ui->graphics->ws_handler->sendEvent(json);
-    handleDeletePageUIChange(current_page_id);
-    state.applyDeletePageEvent(json);
+    ui->graphics->ws_handler->handleEvent(json);
 }
 
 void drawingRoom::on_previous_page_clicked()

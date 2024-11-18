@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QGraphicsScene>
+#include <clickablegraphicsview.h>
 
 namespace Ui {
 class drawingRoom;
@@ -24,16 +25,17 @@ public:
     std::string room_id;
     QGraphicsScene no_page_scene;
 
+    std::list<std::pair<uint64_t, std::shared_ptr<ClickableGraphicsView>>> thumbnailList;
+    std::shared_ptr<ClickableGraphicsView> createThumbnail(std::shared_ptr<QGraphicsScene> scene);
+
     void initialize(std::string initial_room = "[]");
-
-
 
 
     void handleCreatePageUIChange(uint64_t page_id);
 
     void handleDeletePageUIChange(uint64_t page_id);
 
-
+    void select_page(uint64_t page_id);
 
     void on_output_room_clicked();
 
