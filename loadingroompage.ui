@@ -231,6 +231,12 @@ border-radius: 50px; /* Adjust the radius to create an oval shape */
             </item>
             <item>
              <widget class="QPushButton" name="submit">
+              <property name="minimumSize">
+               <size>
+                <width>130</width>
+                <height>130</height>
+               </size>
+              </property>
               <property name="text">
                <string/>
               </property>
