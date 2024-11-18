@@ -33,6 +33,9 @@ drawingRoom::drawingRoom(QWidget *parent)
     , ui(new Ui::drawingRoom)
 {
     ui->setupUi(this);
+
+    ui->sidebartabs_2->setCurrentIndex(0);
+
     no_page_scene.addSimpleText(
         "Add a page to start!",
         QFont("Helvetica", 30));
@@ -195,8 +198,80 @@ drawingRoom::drawingRoom(QWidget *parent)
     ui->erase->setIcon(icon11);
     ui->erase->setIconSize(QSize(20, 20)); // Set icon size if needed
 
+    //symbola icons
+    QIcon icon12(":/png/png/capacitor.svg");
+    ui->symbol1->setIcon(icon12);
+    ui->symbol1->setIconSize(QSize(70, 140));
+
+    QIcon icon13(":/png/png/resistor.svg"); // Path to your SVG file in the resources or filesystem
+    ui->symbol2->setIcon(icon13);
+    ui->symbol2->setIconSize(QSize(70, 140)); // Set icon size if needed
 
 
+    QIcon icon14(":/png/png/inductor.svg"); // Path to your SVG file in the resources or filesystem
+    ui->symbol3->setIcon(icon14);
+    ui->symbol3->setIconSize(QSize(70, 140)); // Set icon size if needed
+
+    QIcon icon15(":/png/png/Group 20.svg"); // Path to your SVG file in the resources or filesystem
+    ui->symbol4->setIcon(icon15);
+    ui->symbol4->setIconSize(QSize(70, 140)); // Set icon size if needed
+
+    QIcon icon16(":/png/png/Group 21.svg"); // Path to your SVG file in the resources or filesystem
+    ui->symbol5->setIcon(icon16);
+    ui->symbol5->setIconSize(QSize(70, 140)); // Set icon size if needed
+
+    QIcon icon17(":/png/png/Group 41.svg"); // Path to your SVG file in the resources or filesystem
+    ui->symbol6->setIcon(icon17);
+    ui->symbol6->setIconSize(QSize(70, 140)); // Set icon size if needed
+
+    QIcon icon18(":/png/png/Group 19.svg"); // Path to your SVG file in the resources or filesystem
+    ui->symbol7->setIcon(icon18);
+    ui->symbol7->setIconSize(QSize(70, 140)); // Set icon size if needed
+
+    QIcon icon19(":/png/png/const current source.svg"); // Path to your SVG file in the resources or filesystem
+    ui->symbol8->setIcon(icon19);
+    ui->symbol8->setIconSize(QSize(70, 140)); // Set icon size if needed
+
+    QIcon icon20(":/png/png/const voltage source.svg"); // Path to your SVG file in the resources or filesystem
+    ui->symbol9->setIcon(icon20);
+    ui->symbol9->setIconSize(QSize(70, 140)); // Set icon size if needed
+
+
+    QIcon icon21(":/png/png/Rectangle 24.svg");
+    ui->shape1->setIcon(icon21);
+    ui->shape1->setIconSize(QSize(50, 50));
+
+    QIcon icon22(":/png/png/Ellipse 4.svg");
+    ui->shape2->setIcon(icon22);
+    ui->shape2->setIconSize(QSize(50, 50));
+
+    QIcon icon23(":/png/png/Line 17.svg");
+    ui->shape3->setIcon(icon23);
+    ui->shape3->setIconSize(QSize(50, 50));
+
+    QIcon icon24(":/png/png/Ellipse 5.svg");
+    ui->shape4->setIcon(icon24);
+    ui->shape4->setIconSize(QSize(100, 50));
+
+    QIcon icon25(":/png/png/Rectangle 25.svg");
+    ui->shape5->setIcon(icon25);
+    ui->shape5->setIconSize(QSize(100, 50));
+
+    QIcon icon26(":/png/png/Arrow 1.svg");
+    ui->shape6->setIcon(icon26);
+    ui->shape6->setIconSize(QSize(100, 50));
+
+    QIcon icon27(":/png/png/Star 1.svg");
+    ui->shape7->setIcon(icon27);
+    ui->shape7->setIconSize(QSize(100, 50));
+
+    QIcon icon28(":/png/png/axis (2).svg");
+    ui->shape8->setIcon(icon28);
+    ui->shape8->setIconSize(QSize(100, 100));
+
+    QIcon icon29(":/png/png/axis.svg");
+    ui->shape9->setIcon(icon29);
+    ui->shape9->setIconSize(QSize(100, 100));
 
 }
 void drawingRoom::setNameLabel(const QString &name) {
