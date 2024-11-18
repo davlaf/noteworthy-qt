@@ -23,7 +23,7 @@
 #include <QPushButton>
 #include "RoomState.hpp"
 
-
+ClickableGraphicsView* currentThumbnail = nullptr;
 
 
 
@@ -38,6 +38,7 @@ drawingRoom::drawingRoom(QWidget *parent)
         QFont("Helvetica", 30));
 
     ui->graphics->setScene(&no_page_scene);
+
 
     ui->collapse->setCursor(Qt::PointingHandCursor);
 
@@ -559,6 +560,8 @@ void drawingRoom::pageSelection(){
 
     ui->graphics->displayScene(state.getScene(index->first));
 
+    currentThumbnail = index->second;
+
 }
 
 void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
@@ -601,6 +604,10 @@ void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
         // create a widget with rounded corners and a border and inside is a QGraphicsView
         qDebug() << "Before tempThumbnail initiation, page ID:" << page_id;
         ClickableGraphicsView* tempThumbnail = new ClickableGraphicsView;
+
+        tempThumbnail->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tempThumbnail->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
         tempThumbnail->setMinimumSize(0, 0);
         tempThumbnail->setMaximumSize(16777215, 16777215);
         tempThumbnail->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
