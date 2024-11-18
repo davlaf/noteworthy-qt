@@ -608,6 +608,7 @@ void drawingRoom::handleCreatePageUIChange(uint64_t page_id) {
         tempThumbnail->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         tempThumbnail->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+        tempThumbnail->setAlignment(Qt::AlignTop);
         tempThumbnail->setMinimumSize(0, 0);
         tempThumbnail->setMaximumSize(16777215, 16777215);
         tempThumbnail->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
