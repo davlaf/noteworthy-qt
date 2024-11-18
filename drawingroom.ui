@@ -232,6 +232,12 @@ border-radius: 20px;
                   <layout class="QVBoxLayout" name="verticalLayout_7">
                    <item>
                     <widget class="QScrollArea" name="scrollArea">
+                     <property name="verticalScrollBarPolicy">
+                      <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                     </property>
+                     <property name="horizontalScrollBarPolicy">
+                      <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                     </property>
                      <property name="sizeAdjustPolicy">
                       <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustIgnored</enum>
                      </property>
@@ -243,8 +249,8 @@ border-radius: 20px;
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>254</width>
-                        <height>523</height>
+                        <width>244</width>
+                        <height>520</height>
                        </rect>
                       </property>
                       <widget class="QWidget" name="verticalLayoutWidget">
@@ -280,28 +286,6 @@ background-color: #FFFFFF;</string>
                      </property>
                      <property name="text">
                       <string>Delete Page</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="previous_page">
-                     <property name="styleSheet">
-                      <string notr="true">color: #000000;
-background-color: #FFFFFF;</string>
-                     </property>
-                     <property name="text">
-                      <string>Previous Page</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="next_page">
-                     <property name="styleSheet">
-                      <string notr="true">color: #000000;
-background-color: #FFFFFF;</string>
-                     </property>
-                     <property name="text">
-                      <string>Next Page</string>
                      </property>
                     </widget>
                    </item>

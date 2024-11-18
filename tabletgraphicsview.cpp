@@ -150,7 +150,7 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
 
 
     //currentThumbnail->fitInView(scene()->sceneRect(), Qt::KeepAspectRatio);
-    currentThumbnail->setScene(scene());
+    // currentThumbnail->setScene(scene());
 
 
 }

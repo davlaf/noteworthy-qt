@@ -6,8 +6,6 @@
 #include <QGraphicsScene>
 #include <clickablegraphicsview.h>
 
-extern ClickableGraphicsView* currentThumbnail;
-
 namespace Ui {
 class drawingRoom;
 }
@@ -27,7 +25,8 @@ public:
     std::string room_id;
     QGraphicsScene no_page_scene;
 
-    std::list<std::pair<uint64_t, ClickableGraphicsView*>> thumbnailList;    
+    std::list<std::pair<uint64_t, std::shared_ptr<ClickableGraphicsView>>> thumbnailList;
+    std::shared_ptr<ClickableGraphicsView> createThumbnail(std::shared_ptr<QGraphicsScene> scene);
 
     void initialize(std::string initial_room = "[]");
 
@@ -36,7 +35,7 @@ public:
 
     void handleDeletePageUIChange(uint64_t page_id);
 
-    void pageSelection();
+    void select_page(uint64_t page_id);
 
     void on_output_room_clicked();
 

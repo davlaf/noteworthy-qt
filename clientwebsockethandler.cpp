@@ -166,8 +166,8 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json &event)
         }
         case PAGE:
         {
-            state.applyDeletePageEvent(event);
             emit pageDeleted(event["page_id"]);
+            state.applyDeletePageEvent(event);
 
             break;
         }
