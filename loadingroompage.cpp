@@ -7,6 +7,10 @@ LoadingRoomPage::LoadingRoomPage(QWidget *parent)
     , ui(new Ui::LoadingRoomPage)
 {
     ui->setupUi(this);
+
+
+    QVBoxLayout *layout = new QVBoxLayout(ui->centralwidget);
+    ui->centralwidget->setLayout(layout);
 }
 
 LoadingRoomPage::~LoadingRoomPage()
@@ -40,3 +44,15 @@ void LoadingRoomPage::on_password_textChanged(const QString &arg1)
 void LoadingRoomPage::setNameLabel(const QString &text) {
     ui->name->setText(text);
 }
+
+void LoadingRoomPage::on_password_returnPressed()
+{
+    std::string password = ui->password->text().toStdString();
+    if (password == "") {
+        return;
+    }
+
+    navigator->goToRoomPageJoin(room_id, user_id, password);
+    clear_password();
+}
+

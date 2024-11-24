@@ -36,6 +36,8 @@
         <file>png/upload_file.svg</file>
         <file>png/delete.svg</file>
         <file>png/add_circle.svg</file>
+        <file>svg/upload_file_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg</file>
+        <file>svg/add_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg</file>
     </qresource>
     <qresource prefix="/png">
         <file>png/Star 1.svg</file>

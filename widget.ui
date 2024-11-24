@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1612</width>
-    <height>595</height>
+    <height>613</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -232,17 +232,14 @@ border-radius: 60px; </string>
              <item>
               <widget class="QLineEdit" name="lineEdit_5">
                <property name="styleSheet">
-                <string notr="true"> width: 127px;          /* Set the width of the circular area */
-    height: 136px;         /* Set the height of the circular area */
+                <string notr="true">
     border-radius: 50px;    /* Make the area circular */
     background-color: white; /* Optional: Set background color */
-    font-size: 120px;      /* Set the font size */
-    font-weight: bold;     /* Make the text bold */
+ width: 127px;          /* Set the width of the circular area */
+    height: 136px;         /* Set the height of the circular area */
     color: #757397;         /* Set text color to purple */
-    text-align: center;    /* Center the text */</string>
-               </property>
-               <property name="maxLength">
-                <number>1</number>
+    text-align: center;    /* Center the text */
+  font-size: 120px;      /* Set the font size */</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -252,17 +249,14 @@ border-radius: 60px; </string>
              <item>
               <widget class="QLineEdit" name="lineEdit_6">
                <property name="styleSheet">
-                <string notr="true"> width: 127px;          /* Set the width of the circular area */
-    height: 136px;         /* Set the height of the circular area */
+                <string notr="true">
     border-radius: 50px;    /* Make the area circular */
     background-color: white; /* Optional: Set background color */
-    font-size: 120px;      /* Set the font size */
-    font-weight: bold;     /* Make the text bold */
+ width: 127px;          /* Set the width of the circular area */
+    height: 136px;         /* Set the height of the circular area */
     color: #757397;         /* Set text color to purple */
-    text-align: center;    /* Center the text */</string>
-               </property>
-               <property name="maxLength">
-                <number>1</number>
+    text-align: center;    /* Center the text */
+  font-size: 120px;      /* Set the font size */</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -272,17 +266,14 @@ border-radius: 60px; </string>
              <item>
               <widget class="QLineEdit" name="lineEdit_7">
                <property name="styleSheet">
-                <string notr="true"> width: 127px;          /* Set the width of the circular area */
-    height: 136px;         /* Set the height of the circular area */
+                <string notr="true">
     border-radius: 50px;    /* Make the area circular */
     background-color: white; /* Optional: Set background color */
-    font-size: 120px;      /* Set the font size */
-    font-weight: bold;     /* Make the text bold */
+ width: 127px;          /* Set the width of the circular area */
+    height: 136px;         /* Set the height of the circular area */
     color: #757397;         /* Set text color to purple */
-    text-align: center;    /* Center the text */</string>
-               </property>
-               <property name="maxLength">
-                <number>1</number>
+    text-align: center;    /* Center the text */
+  font-size: 120px;      /* Set the font size */</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -292,17 +283,14 @@ border-radius: 60px; </string>
              <item>
               <widget class="QLineEdit" name="lineEdit_8">
                <property name="styleSheet">
-                <string notr="true"> width: 127px;          /* Set the width of the circular area */
-    height: 136px;         /* Set the height of the circular area */
+                <string notr="true">
     border-radius: 50px;    /* Make the area circular */
     background-color: white; /* Optional: Set background color */
-    font-size: 120px;      /* Set the font size */
-    font-weight: bold;     /* Make the text bold */
+ width: 127px;          /* Set the width of the circular area */
+    height: 136px;         /* Set the height of the circular area */
     color: #757397;         /* Set text color to purple */
-    text-align: center;    /* Center the text */</string>
-               </property>
-               <property name="maxLength">
-                <number>1</number>
+    text-align: center;    /* Center the text */
+  font-size: 120px;      /* Set the font size */</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -312,17 +300,14 @@ border-radius: 60px; </string>
              <item>
               <widget class="QLineEdit" name="lineEdit_9">
                <property name="styleSheet">
-                <string notr="true"> width: 127px;          /* Set the width of the circular area */
-    height: 136px;         /* Set the height of the circular area */
+                <string notr="true">
     border-radius: 50px;    /* Make the area circular */
     background-color: white; /* Optional: Set background color */
-    font-size: 120px;      /* Set the font size */
-    font-weight: bold;     /* Make the text bold */
+ width: 127px;          /* Set the width of the circular area */
+    height: 136px;         /* Set the height of the circular area */
     color: #757397;         /* Set text color to purple */
-    text-align: center;    /* Center the text */</string>
-               </property>
-               <property name="maxLength">
-                <number>1</number>
+    text-align: center;    /* Center the text */
+  font-size: 120px;      /* Set the font size */</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -352,19 +337,16 @@ border-radius: 60px; </string>
                </property>
                <property name="font">
                 <font>
-                 <pointsize>60</pointsize>
+                 <pointsize>110</pointsize>
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">	color: rgba(0, 0, 0, 0.7);
+                <string notr="true">color: white;
 
 </string>
                </property>
                <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset theme="QIcon::ThemeIcon::MediaPlaybackStart"/>
+                <string>&gt;</string>
                </property>
                <property name="iconSize">
                 <size>
@@ -419,8 +401,23 @@ font-size: 14px;
 </string>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout">
+             <property name="leftMargin">
+              <number>32</number>
+             </property>
              <item>
               <widget class="QLabel" name="label_4">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>400</width>
+                 <height>16777215</height>
+                </size>
+               </property>
                <property name="font">
                 <font>
                  <pointsize>35</pointsize>
@@ -438,22 +435,9 @@ font: 35pt;
 </string>
                </property>
                <property name="text">
-                <string>   Create room</string>
+                <string>Create room</string>
                </property>
               </widget>
-             </item>
-             <item>
-              <spacer name="verticalSpacer">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
              </item>
              <item>
               <widget class="QPushButton" name="getfile">

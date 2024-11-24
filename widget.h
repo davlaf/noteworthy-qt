@@ -53,6 +53,10 @@ private slots:
 
 
 
+    void on_lineEdit_9_returnPressed();
+    void handleTextChange(QLineEdit *currentLineEdit, QLineEdit *nextLineEdit, const QString &arg1);
+
+
 private:
     Ui::Widget *ui;
 };

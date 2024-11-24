@@ -34,6 +34,8 @@ private slots:
 
     void on_password_textChanged(const QString &arg1);
 
+    void on_password_returnPressed();
+
 private:
     Ui::LoadingRoomPage *ui;
 };

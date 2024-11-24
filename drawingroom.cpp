@@ -300,9 +300,9 @@ void drawingRoom::on_collapse_clicked()
     if (ui->sidebar->width() > 80)
     { // If sidebar is currently expanded
         lastWidth = ui->sidebar->width();
-        animationMin->setStartValue(lastWidth);
+        animationMin->setStartValue(280);
         animationMin->setEndValue(80); // Collapse to 60 width
-        animationMax->setStartValue(lastWidth);
+        animationMax->setStartValue(280);
         animationMax->setEndValue(80);
 
         originalPos = ui->collapse->mapToGlobal(QPoint(0, 0));
@@ -345,9 +345,9 @@ void drawingRoom::on_collapse_clicked()
         ui->collapse->show(); // Show the button
 
         animationMin->setStartValue(80);
-        animationMin->setEndValue(lastWidth); // Expand to full width
+        animationMin->setEndValue(280); // Expand to full width
         animationMax->setStartValue(80);
-        animationMax->setEndValue(lastWidth);
+        animationMax->setEndValue(280);
 
         for (QObject *child : ui->sidebar->children())
         {

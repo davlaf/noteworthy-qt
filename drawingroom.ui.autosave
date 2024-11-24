@@ -246,7 +246,7 @@ background-color: transparent;
 </string>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>3</number>
               </property>
               <widget class="QWidget" name="pageTab">
                <attribute name="title">
