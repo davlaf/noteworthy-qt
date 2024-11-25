@@ -18,6 +18,8 @@ public:
 private slots:
     void on_button_clicked();
 
+    void on_lineEdit_returnPressed();
+
 private:
     Ui::NewUser *ui;
 };

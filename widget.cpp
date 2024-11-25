@@ -17,17 +17,17 @@ Widget::Widget(QWidget *parent)
 {
     ui->setupUi(this);
 
-    ui->lineEdit_5->setMaxLength(1);
-    ui->lineEdit_6->setMaxLength(1);
-    ui->lineEdit_7->setMaxLength(1);
-    ui->lineEdit_8->setMaxLength(1);
+    // ui->lineEdit_5->setMaxLength(2);
+    // ui->lineEdit_6->setMaxLength(2);
+    // ui->lineEdit_7->setMaxLength(2);
+    // ui->lineEdit_8->setMaxLength(2);
     ui->lineEdit_9->setMaxLength(1);
 
-    QRegularExpression regex("[A-Za-z0-9]");  // Allows only letters and numbers
+    QRegularExpression regex("[A-Za-z1-9]+");
     QValidator *validator = new QRegularExpressionValidator(regex, this);
 
     ui->lineEdit_5->setValidator(validator);
-    ui->lineEdit_6->setValidator(validator);
+    ui->lineEdit_9->setValidator(validator);
     ui->lineEdit_7->setValidator(validator);
     ui->lineEdit_8->setValidator(validator);
     ui->lineEdit_9->setValidator(validator);
@@ -43,6 +43,16 @@ Widget::Widget(QWidget *parent)
     for (QLineEdit *lineEdit : lineEdits) {
         lineEdit->installEventFilter(this);
     }
+
+
+
+    QIcon fileicon(":/svg/svg/upload_file_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg");
+    ui->getfile->setIcon(fileicon);
+    ui->getfile->setIconSize(QSize(120, 120));
+
+    QIcon pageicon(":/svg/svg/add_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg");
+    ui->newpage->setIcon(pageicon);
+    ui->newpage->setIconSize(QSize(120, 120));
 }
 
 
@@ -61,8 +71,9 @@ void Widget::setLabelText(const QString &text) {
 void Widget::on_lineEdit_5_textChanged(const QString &arg1)
 {
     setErrorText("");
+    qDebug() << "Text in lineEdit_5 changed:" << arg1;
 
-    if (arg1.isEmpty()) {
+    if (ui->lineEdit_5->text().length() == 0) {
         ui->lineEdit_5->setFocus();  // Move back to previous line edit
         return;
     }
@@ -71,6 +82,7 @@ void Widget::on_lineEdit_5_textChanged(const QString &arg1)
         ui->lineEdit_5->setText(arg1.toUpper());
         ui->lineEdit_6->setFocus();
     }
+    handleTextChange(ui->lineEdit_5, ui->lineEdit_6, arg1);
 }
 
 
@@ -87,6 +99,7 @@ void Widget::on_lineEdit_6_textChanged(const QString &arg1)
         ui->lineEdit_6->setText(arg1.toUpper());
         ui->lineEdit_7->setFocus();
     }
+    handleTextChange(ui->lineEdit_6, ui->lineEdit_7, arg1);
 }
 
 
@@ -103,6 +116,7 @@ void Widget::on_lineEdit_7_textChanged(const QString &arg1)
         ui->lineEdit_7->setText(arg1.toUpper());
         ui->lineEdit_8->setFocus();
     }
+    handleTextChange(ui->lineEdit_7, ui->lineEdit_8, arg1);
 }
 
 
@@ -110,7 +124,7 @@ void Widget::on_lineEdit_8_textChanged(const QString &arg1)
 {
     setErrorText("");
 
-    if (arg1.isEmpty()) {
+    if (ui->lineEdit_8->text().length() == 0) {
         ui->lineEdit_7->setFocus();  // Move back to previous line edit
         return;
     }
@@ -119,6 +133,7 @@ void Widget::on_lineEdit_8_textChanged(const QString &arg1)
         ui->lineEdit_8->setText(arg1.toUpper());
         ui->lineEdit_9->setFocus();
     }
+    handleTextChange(ui->lineEdit_8, ui->lineEdit_9, arg1);
 }
 
 
@@ -135,6 +150,7 @@ void Widget::on_lineEdit_9_textChanged(const QString &arg1)
         ui->lineEdit_9->setText(arg1.toUpper());
         ui->lineEdit_9->setFocus();
     }
+
 }
 
 void Widget::on_codeEnter_clicked()
@@ -144,6 +160,7 @@ void Widget::on_codeEnter_clicked()
                    ui->lineEdit_7->text() +
                    ui->lineEdit_8->text() +
                    ui->lineEdit_9->text();
+
     QString name = ui->name->text();
     navigator->goToRoomPageJoin(code.toStdString(), username.toStdString());
 }
@@ -194,3 +211,28 @@ bool Widget::eventFilter(QObject *watched, QEvent *event) {
 
 
 
+
+void Widget::on_lineEdit_9_returnPressed()
+{
+    QString code = ui->lineEdit_5->text() +
+                   ui->lineEdit_6->text() +
+                   ui->lineEdit_7->text() +
+                   ui->lineEdit_8->text() +
+                   ui->lineEdit_9->text();
+    qDebug()  << code;
+    QString name = ui->name->text();
+    navigator->goToRoomPageJoin(code.toStdString(), username.toStdString());
+}
+
+
+void Widget::handleTextChange(QLineEdit *currentLineEdit, QLineEdit *nextLineEdit, const QString &arg1)
+{
+    if (arg1.length() == 2) {
+        QString currentText = currentLineEdit->text();
+        QString nextText = arg1.at(1);
+        currentLineEdit->setText(currentText.at(0));
+        nextLineEdit->setText(nextText);
+
+        nextLineEdit->setFocus();
+    }
+}
