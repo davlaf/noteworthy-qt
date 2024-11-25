@@ -53,6 +53,18 @@ drawingRoom::drawingRoom(QWidget *parent)
 
     ui->graphics->setScene(&no_page_scene);
 
+    connect(
+        &ui->graphics->ws_handler,
+        &ClientWebSocketHandler::pageCreated,
+        this,
+        &drawingRoom::handleCreatePageUIChange);
+
+    connect(
+        &ui->graphics->ws_handler,
+        &ClientWebSocketHandler::pageDeleted,
+        this,
+        &drawingRoom::handleDeletePageUIChange);
+
     ui->collapse->setCursor(Qt::PointingHandCursor);
     ui->copyCode->setCursor(Qt::PointingHandCursor);
 
@@ -437,7 +449,7 @@ void drawingRoom::on_draw_clicked()
                              "border: none;"
                              "}");
 
-    ui->graphics->current_transform = CREATE;
+    ui->graphics->touch_state.current_touch_action = TouchState::APPEND_STROKE;
 }
 
 void drawingRoom::on_erase_clicked()
@@ -453,7 +465,7 @@ void drawingRoom::on_erase_clicked()
                             "border: none;"
                             "}");
 
-    ui->graphics->current_transform = DELETE;
+    ui->graphics->touch_state.current_touch_action = TouchState::ERASE_STROKE;
 }
 
 void drawingRoom::on_pages_clicked()
@@ -567,49 +579,54 @@ void drawingRoom::on_settings_clicked()
                                "}");
 }
 
+void clearLayout(QVBoxLayout* layout) {
+    if (!layout)
+        return;
+
+           // Iterate through all the items in the layout
+    while (QLayoutItem* item = layout->takeAt(0)) {
+        qDebug() << "DELETE THUMBNAIL!!!!!!!!!!!!!! <<<<<<";
+        // If the item contains a widget, delete it
+        if (QWidget* widget = item->widget()) {
+            widget->deleteLater(); // Schedule the widget for deletion
+        }
+        // If the item contains a layout, clear it recursively
+        else if (QLayout* childLayout = item->layout()) {
+            clearLayout(static_cast<QVBoxLayout*>(childLayout));
+        }
+        // Delete the layout item
+        delete item;
+    }
+}
+
 void drawingRoom::initialize(std::string initial_room)
 {
-    ui->graphics->ws_handler = std::make_shared<ClientWebSocketHandler>();
-    ui->graphics->ws_handler->openConnection();
     ui->graphics->setScene(&no_page_scene);
     ui->graphics->user_id = user_id;
     ui->graphics->resetTransform();
     // clear layout
+    qDebug() << "clear thumbnails";
     thumbnailList.clear();
-    while (QLayoutItem *item = ui->thumbnailScrollableLayout->takeAt(0))
-    {
-        if (QWidget *widget = item->widget())
-        {
-            widget->deleteLater(); // Schedule the widget for deletion
-        }
-        // not sure if this is necessary
-        // delete item; // Delete the layout item
-    }
 
-    ui->code->setText(QString::fromStdString(room_id));
-
-    connect(
-        ui->graphics->ws_handler.get(),
-        &ClientWebSocketHandler::pageCreated,
-        this,
-        &drawingRoom::handleCreatePageUIChange);
-
-    connect(
-        ui->graphics->ws_handler.get(),
-        &ClientWebSocketHandler::pageDeleted,
-        this,
-        &drawingRoom::handleDeletePageUIChange);
+    // auto layout = ui->thumbnailScrollableLayout->layout();
+    // static_cast<QBoxLayout *>(layout)->insertWidget(index, new_thumbnail.get());
+    clearLayout(ui->thumbnailScrollableLayout);
 
     nlohmann::json event_list = nlohmann::json::parse(initial_room);
     for (auto &event : event_list)
     {
-        std::string epic = event.dump();
-        ui->graphics->ws_handler->handleEvent(event);
+        ui->graphics->ws_handler.handleEvent(event);
     }
+
+
+    ui->graphics->ws_handler.openConnection(user_id, state.room_id);
+    ui->code->setText(QString::fromStdString(state.room_id));
+    setNameLabel(QString::fromStdString(state.owner_id+"'s Room"));
 
     uint64_t first_page_id;
     if (!state.getFirstPageId(first_page_id))
     {
+        ui->graphics->current_page_id = 0;
         return;
     }
 
@@ -678,49 +695,49 @@ void drawingRoom::handleCreatePageUIChange(uint64_t page_id)
 
     // get the page
     state.manipulatePage(page_id, [this, page_id](Page &page)
-                         {
-                             qDebug() << "Entering manipulatePage, page ID:" << page_id;
+         {
+             qDebug() << "Entering manipulatePage, page ID:" << page_id;
 
-                             auto new_thumbnail = createThumbnail(page.scene);
+             auto new_thumbnail = createThumbnail(page.scene);
 
-                             uint64_t prev_page_id;
-                             qDebug() << "Before getPrevPageId initiation, page ID:" << page_id;
-                             size_t index = 0;
+             uint64_t prev_page_id;
+             qDebug() << "Before getPrevPageId initiation, page ID:" << page_id;
+             size_t index = 0;
 
-                             if (!state.getPrevPageId(page_id, prev_page_id))
-                             {
-                                 prev_page_id = 0;
-                             }
+             if (!state.getPrevPageId(page_id, prev_page_id))
+             {
+                 prev_page_id = 0;
+             }
 
-                             if (prev_page_id == 0)
-                             {
-                                 thumbnailList.push_front({page_id, new_thumbnail});
-                             }
-                             else
-                             {
-                                 auto it = std::find_if(
-                                     thumbnailList.begin(),
-                                     thumbnailList.end(),
-                                     [&prev_page_id](const auto &pair)
-                                     { return pair.first == prev_page_id; });
+             if (prev_page_id == 0)
+             {
+                 thumbnailList.push_front({page_id, new_thumbnail});
+             }
+             else
+             {
+                 auto it = std::find_if(
+                     thumbnailList.begin(),
+                     thumbnailList.end(),
+                     [&prev_page_id](const auto &pair)
+                     { return pair.first == prev_page_id; });
 
-                                 if (it == thumbnailList.end())
-                                 {
-                                     throw "page not found!";
-                                 }
+                 if (it == thumbnailList.end())
+                 {
+                     throw "page not found!";
+                 }
 
-                                 index = std::distance(thumbnailList.begin(), std::next(it));
-                                 thumbnailList.insert(std::next(it), {page_id, new_thumbnail});
-                             }
+                 index = std::distance(thumbnailList.begin(), std::next(it));
+                 thumbnailList.insert(std::next(it), {page_id, new_thumbnail});
+             }
 
-                             auto layout = ui->thumbnailScrollableLayout->layout();
-                             static_cast<QBoxLayout *>(layout)->insertWidget(index, new_thumbnail.get());
+             auto layout = ui->thumbnailScrollableLayout->layout();
+             static_cast<QBoxLayout *>(layout)->insertWidget(index, new_thumbnail.get());
 
-                             connect(new_thumbnail.get(), &ClickableGraphicsView::clicked, this, [this, page_id]()
-                                     { select_page(page_id); });
+             connect(new_thumbnail.get(), &ClickableGraphicsView::clicked, this, [this, page_id]()
+                     { select_page(page_id); });
 
-                             select_page(page_id);
-                         });
+             select_page(page_id);
+         });
 };
 void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
 {
@@ -800,9 +817,12 @@ void drawingRoom::on_create_page_clicked()
 {
     nlohmann::json json;
     uint64_t new_id = IDGenerator::newID();
-    state.createInsertPageEvent(json, ui->graphics->current_page_id, new_id);
-    ui->graphics->ws_handler->sendEvent(json);
-    ui->graphics->ws_handler->handleEvent(json);
+    Page page;
+    page.page_id = new_id;
+    page.room_id = state.room_id;
+    page.createInsertPageEvent(json, ui->graphics->current_page_id);
+    ui->graphics->ws_handler.sendEvent(json);
+    ui->graphics->ws_handler.handleEvent(json);
     state.manipulatePage(new_id, [this](Page &page)
                          { ui->graphics->displayScene(page.scene); });
     ui->graphics->current_page_id = new_id;
@@ -814,9 +834,11 @@ void drawingRoom::on_delete_page_clicked()
     uint64_t current_page_id = ui->graphics->current_page_id;
 
     nlohmann::json json;
-    state.createDeletePageEvent(json, current_page_id);
-    ui->graphics->ws_handler->sendEvent(json);
-    ui->graphics->ws_handler->handleEvent(json);
+    state.manipulatePage(current_page_id, [&json](Page& page){
+        page.createDeleteEvent(json);
+    });
+    ui->graphics->ws_handler.sendEvent(json);
+    ui->graphics->ws_handler.handleEvent(json);
 }
 
 void drawingRoom::on_previous_page_clicked()

@@ -1,6 +1,7 @@
 #ifndef DRAWINGROOM_H
 #define DRAWINGROOM_H
 
+#include "ui_drawingroom.h"
 #include <QWidget>
 #include <QPushButton>
 #include <QGraphicsScene>
@@ -22,8 +23,11 @@ public:
     void setButtonIconWithColor(QPushButton *button, const QString &svgPath, const QColor &color);
     void setUser(const QString &initial);
     std::string user_id;
-    std::string room_id;
     QGraphicsScene no_page_scene;
+
+    void closeWebSocket() {
+        ui->graphics->ws_handler.closeWebSocket();
+    }
 
     std::list<std::pair<uint64_t, std::shared_ptr<ClickableGraphicsView>>> thumbnailList;
     std::shared_ptr<ClickableGraphicsView> createThumbnail(std::shared_ptr<QGraphicsScene> scene);

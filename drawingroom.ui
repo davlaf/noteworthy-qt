@@ -232,7 +232,7 @@ border-radius: 20px;
                <string notr="true"/>
               </property>
               <property name="currentIndex">
-               <number>3</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="pageTab">
                <attribute name="title">
@@ -262,7 +262,7 @@ border-radius: 20px;
                         <x>0</x>
                         <y>0</y>
                         <width>244</width>
-                        <height>520</height>
+                        <height>535</height>
                        </rect>
                       </property>
                       <widget class="QWidget" name="verticalLayoutWidget">

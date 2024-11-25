@@ -47,28 +47,48 @@ public:
         loading_room_page.hide();
     }
 
-    void goToRoomPageCreate(const std::string& room_id, const std::string& user_id) {
+    void goToRoomPageCreate(const std::string& user_id) {
         // initialize room page
-        state.room_id = room_id;
-        state.owner_id = user_id;
         room_page.user_id = user_id;
-        room_page.room_id = room_id;
-        nlohmann::json json;
-        state.createCreateRoomEvent(json);
-        state.applyCreateRoomEvent(json);
-        room_page.initialize();
-        room_page.show();
-        homepage.hide();
-        welcome_page.hide();
-        loading_room_page.hide();
+        createRoom(user_id, [user_id, this](std::string responseString, HttpStatusCode code){
+            // epic
+            switch (code) {
+            case Created:
+                state.room_id = responseString;
+                getRoomState(responseString, "", [this](std::string responseString, HttpStatusCode code){
+                    switch (code) {
+                    case OK:
+                        room_page.show();
+                        room_page.initialize(responseString);
+                        homepage.hide();
+                        welcome_page.hide();
+                        loading_room_page.hide();
+                        break;
+                    default:
+                        break;
+                    }
+                });
+                break;
+            default:
+                homepage.setErrorText("Failed to create room");
+                break;
+            }
+        });
     }
 
-    enum RoomHTTPCodes {
-        Ok = 200,
-        Locked = 423,
+    enum HttpStatusCode {
+        InvalidCode = -1,
+        // Success codes
+        OK = 200,
+        Created = 201,
+
+        // Client error responses
+        BadRequest = 400,
         Unauthorized = 401,
         Forbidden = 403,
-        NotFound = 404
+        NotFound = 404,
+        Conflict = 409,
+        Locked = 423
     };
 
     void goToLoadingRoomPage(const std::string& room_id, const std::string& user_id) {
@@ -83,22 +103,30 @@ public:
     }
 
     void goToRoomPageJoin(const std::string& room_id, const std::string& user_id, const std::string password = "") {
+        room_page.closeWebSocket();
         state.room_id = room_id;
         room_page.user_id = user_id;
-        room_page.room_id = room_id;
         room_page.setCodeLabel(QString::fromStdString(room_id));
-        room_page.setNameLabel(QString::fromStdString(user_id)+"'s Room");
         room_page.setUser(QString::fromStdString(user_id).at(0));
 
-        fetchRoom(room_id, [room_id, user_id, this](std::string responseString, RoomHTTPCodes code){
-            // epic
+        createUserConnection(user_id, room_id, password, [room_id, user_id, password, this](std::string responseString, HttpStatusCode code){
             switch (code) {
-            case Ok:
-                room_page.show();
-                room_page.initialize(responseString);
-                homepage.hide();
-                welcome_page.hide();
-                loading_room_page.hide();
+            case Created:
+            case OK:
+                getRoomState(room_id, password, [room_id, user_id, password, this](std::string responseString, HttpStatusCode code){
+                    switch (code) {
+                    case OK:
+                        room_page.show();
+                        room_page.initialize(responseString);
+                        homepage.hide();
+                        welcome_page.hide();
+                        loading_room_page.hide();
+                        break;
+                    default:
+                        break;
+                    }
+                });
+
                 break;
             case Locked: {
                 goToLoadingRoomPage(room_id, user_id);
@@ -108,49 +136,112 @@ public:
                 throw "auth header is incorrect";
                 break;
             case Forbidden:
-                loading_room_page.setErrorText("Incorrect password");
+                if (responseString == "Incorrect Password") {
+                    homepage.setErrorText("Incorrect Password");
+                } else {
+                    homepage.setErrorText("You are no longer allowed in this room");
+                }
                 break;
             case NotFound:
                 homepage.setErrorText("Invalid room code");
                 break;
+            case Conflict:
+                goToHomepage();
+                homepage.setErrorText("Username already connected to room");
+                break;
+            case BadRequest:
+            case InvalidCode:
+                throw std::runtime_error("invalid request situation");
+                break;
             }
-        }, password);
+        });
     }
 
     QNetworkAccessManager manager;
 
-    void fetchRoom(
-        const std::string& room_id,
-        const std::function<void(std::string, RoomHTTPCodes)> &onReply,
-        const std::string password = "") {
-        QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms/"+room_id));
-        // QUrl url(QString::fromStdString("https://noteworthy.howdoesthiseven.work/v1/rooms/"+room_id));
+    enum class HttpMethod {
+        GET,
+        POST
+    };
+
+public:
+    using ApiResponseCallback = std::function<void(std::string, HttpStatusCode)>;
+
+    void makeRequest(
+        HttpMethod method,
+        const QUrl& url,
+        const std::string& password = "",
+        const ApiResponseCallback& onReply = nullptr
+        ) {
         QNetworkRequest request(url);
 
-        // Set the authorization header
-        if (password != "") {
-            request.setRawHeader("Authorization", QByteArray("Bearer " + password));
+               // Set headers
+        if (!password.empty()) {
+            request.setRawHeader("Authorization", QByteArray("Bearer " + QString::fromStdString(password).toUtf8()));
         }
 
-        // Send GET request
-        QNetworkReply *reply = manager.get(request);
+               // Determine the HTTP method
+        QNetworkReply* reply = nullptr;
+        if (method == HttpMethod::POST) {
+            reply = manager.post(request, QByteArray()); // POST
+        } else if (method == HttpMethod::GET) {
+            reply = manager.get(request); // GET
+        }
 
-        QObject::connect(reply, &QNetworkReply::finished, [this, reply, onReply]() {
+        QObject* tempContext = new QObject(reply); // Temporary context
+
+               // Handle the reply
+        QObject::connect(reply, &QNetworkReply::finished, tempContext, [tempContext, this, reply, onReply]() {
             QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+
             if (!statusCode.isValid() || statusCode.toInt() >= 500) {
                 homepage.setErrorText("Noteworthy server not online, please try again later");
-                qDebug() << "HTTP Status Code not available";
+                reply->deleteLater(); // Clean up
                 return;
             }
 
             QByteArray responseData = reply->readAll();
+
+            HttpStatusCode httpStatusCode = static_cast<HttpStatusCode>(statusCode.isValid() ? statusCode.toInt() : -1);
             std::string responseString = responseData.toStdString();
 
-            RoomHTTPCodes httpStatusCode = static_cast<RoomHTTPCodes>(statusCode.toInt());
+            if (onReply) {
+                onReply(responseString, httpStatusCode);
+            }
 
-            onReply(responseString, httpStatusCode);
-            reply->deleteLater(); // Clean up
-        });
+            reply->deleteLater(); // Clean up reply
+            tempContext->deleteLater(); // Clean up context
+        }); // !!ADD CONTEXT OBJECT HERE!!!!
+    }
+
+           // Create a room
+    void createRoom(
+        const std::string& owner_id,
+        const ApiResponseCallback& onReply
+        ) {
+        QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms?username=" + owner_id));
+        makeRequest(HttpMethod::POST, url, "", onReply);
+    }
+
+           // Create a user connection
+    void createUserConnection(
+        const std::string& username,
+        const std::string& room_id,
+        const std::string& password,
+        const ApiResponseCallback& onReply
+        ) {
+        QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms/" + room_id + "/users?username=" + username));
+        makeRequest(HttpMethod::POST, url, password, onReply);
+    }
+
+           // Get room state
+    void getRoomState(
+        const std::string& room_id,
+        const std::string& password,
+        const ApiResponseCallback& onReply
+        ) {
+        QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms/" + room_id));
+        makeRequest(HttpMethod::GET, url, password, onReply);
     }
 
     // void fetchRoomWithPassword

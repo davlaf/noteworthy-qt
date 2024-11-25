@@ -160,7 +160,7 @@ void Widget::on_getfile_clicked()
 
 void Widget::on_newpage_clicked()
 {
-    throw "not implemented new page yet";
+    navigator->goToRoomPageCreate(username.toStdString());
 }
 
 void Widget::setUsername(const QString& username) {
@@ -171,8 +171,6 @@ void Widget::setUsername(const QString& username) {
 void Widget::setErrorText(const QString& error) {
     ui->error->setText(error);
 }
-
-
 
 
 bool Widget::eventFilter(QObject *watched, QEvent *event) {

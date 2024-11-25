@@ -40,7 +40,7 @@ public:
     };
 
 public:
-    std::shared_ptr<ClientWebSocketHandler> ws_handler;
+    ClientWebSocketHandler ws_handler;
 
     void displayScene(std::shared_ptr<QGraphicsScene> scene)
     {
@@ -55,16 +55,13 @@ public:
     uint64_t current_page_id = 0;
     std::string user_id;
 
-    enum EventObjectType current_object = STROKE;
-    enum EventType current_transform = CREATE;
-
+    TouchState touch_state;
 private:
     void resizeEvent(QResizeEvent *event) override;
     void handleTouch(QPointF position, int id);
     void handleRelease(QPointF position, int id);
     void handleMove(QPointF position, int id);
 
-    TouchState touch_state;
     void updateViewFromTouchState();
 
     QPen pen;

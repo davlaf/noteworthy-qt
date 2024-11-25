@@ -1,23 +1,11 @@
 #pragma once
 
-enum EventType
-{
-    CREATE,
-    DELETE,
-    MOVE,
-    SCALE,
-    ROTATE,
-    APPEND,
-    EDIT,
-};
-
-enum EventObjectType
-{
+enum EventObjectType {
     ROOM,
     PAGE,
+    USER,
     STROKE,
     SYMBOL,
     SHAPE,
     TEXT,
-    BACKGROUND_IMAGE,
 };

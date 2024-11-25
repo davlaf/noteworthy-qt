@@ -7,7 +7,16 @@
 #include <map>
 
 class TouchState {
+
 public:
+    enum TouchAction {
+        APPEND_STROKE,
+        ERASE_STROKE,
+        DRAG_SELECTION,
+        DRAG_HANDLE,
+    };
+    TouchAction current_touch_action = APPEND_STROKE;
+
     void print() {
         qDebug() << "TouchState:";
         for (int id : touch_priority) {

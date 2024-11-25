@@ -58,11 +58,14 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         RandomIdGenerator.hpp RandomIdGenerator.cpp
         ClientWebSocketHandler.hpp ClientWebSocketHandler.cpp
         CanvasObject.hpp
+        SendableObject.hpp
         AppNavigator.hpp AppNavigator.cpp
         EventTypeEnums.hpp
         Selection.hpp
         resource.qrc
         TouchState.hpp
+        User.hpp
+        SendableObject.hpp
         clickablegraphicsview.h
     )
 # Define target properties for Android with Qt 6 as:
