@@ -1,24 +1,22 @@
 #pragma once
 
 #include "RoomState.hpp"
+#include "drawingroom.h"
+#include "hosts.hpp"
 #include "loadingroompage.h"
-#include <QCoreApplication>
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QUrl>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QDebug>
-#include <QMessageBox>
 #include "newuser.h"
 #include "widget.h"
-#include "drawingroom.h"
+#include <QCoreApplication>
+#include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMessageBox>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QUrl>
 
-
-
-class AppNavigator
-{
+class AppNavigator {
 public:
     // Homepage homepage;
     // WelcomePage welcome_page;
@@ -28,34 +26,38 @@ public:
     drawingRoom room_page;
     LoadingRoomPage loading_room_page;
 
-    void goToWelcomePage() {
+    void goToWelcomePage()
+    {
         welcome_page.show();
         homepage.hide();
         room_page.hide();
         loading_room_page.hide();
     }
 
-    void goToHomepage(const QString& user_id) {
+    void goToHomepage(const QString& user_id)
+    {
         homepage.setUsername(user_id);
         goToHomepage();
     }
 
-    void goToHomepage() {
+    void goToHomepage()
+    {
         homepage.show();
         welcome_page.hide();
         room_page.hide();
         loading_room_page.hide();
     }
 
-    void goToRoomPageCreate(const std::string& user_id) {
+    void goToRoomPageCreate(const std::string& user_id)
+    {
         // initialize room page
         room_page.user_id = user_id;
-        createRoom(user_id, [user_id, this](std::string responseString, HttpStatusCode code){
+        createRoom(user_id, [user_id, this](std::string responseString, HttpStatusCode code) {
             // epic
             switch (code) {
             case Created:
                 state.room_id = responseString;
-                getRoomState(responseString, "", [this](std::string responseString, HttpStatusCode code){
+                getRoomState(responseString, "", [this](std::string responseString, HttpStatusCode code) {
                     switch (code) {
                     case OK:
                         room_page.show();
@@ -91,7 +93,8 @@ public:
         Locked = 423
     };
 
-    void goToLoadingRoomPage(const std::string& room_id, const std::string& user_id) {
+    void goToLoadingRoomPage(const std::string& room_id, const std::string& user_id)
+    {
 
         loading_room_page.room_id = room_id;
         loading_room_page.setNameLabel(QString::fromStdString(user_id));
@@ -102,18 +105,19 @@ public:
         room_page.hide();
     }
 
-    void goToRoomPageJoin(const std::string& room_id, const std::string& user_id, const std::string password = "") {
+    void goToRoomPageJoin(const std::string& room_id, const std::string& user_id, const std::string password = "")
+    {
         room_page.closeWebSocket();
         state.room_id = room_id;
         room_page.user_id = user_id;
         room_page.setCodeLabel(QString::fromStdString(room_id));
         room_page.setUser(QString::fromStdString(user_id).at(0));
 
-        createUserConnection(user_id, room_id, password, [room_id, user_id, password, this](std::string responseString, HttpStatusCode code){
+        createUserConnection(user_id, room_id, password, [room_id, user_id, password, this](std::string responseString, HttpStatusCode code) {
             switch (code) {
             case Created:
             case OK:
-                getRoomState(room_id, password, [room_id, user_id, password, this](std::string responseString, HttpStatusCode code){
+                getRoomState(room_id, password, [room_id, user_id, password, this](std::string responseString, HttpStatusCode code) {
                     switch (code) {
                     case OK:
                         room_page.show();
@@ -171,16 +175,16 @@ public:
         HttpMethod method,
         const QUrl& url,
         const std::string& password = "",
-        const ApiResponseCallback& onReply = nullptr
-        ) {
+        const ApiResponseCallback& onReply = nullptr)
+    {
         QNetworkRequest request(url);
 
-               // Set headers
+        // Set headers
         if (!password.empty()) {
             request.setRawHeader("Authorization", QByteArray("Bearer " + QString::fromStdString(password).toUtf8()));
         }
 
-               // Determine the HTTP method
+        // Determine the HTTP method
         QNetworkReply* reply = nullptr;
         if (method == HttpMethod::POST) {
             reply = manager.post(request, QByteArray()); // POST
@@ -190,7 +194,7 @@ public:
 
         QObject* tempContext = new QObject(reply); // Temporary context
 
-               // Handle the reply
+        // Handle the reply
         QObject::connect(reply, &QNetworkReply::finished, tempContext, [tempContext, this, reply, onReply]() {
             QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
 
@@ -214,33 +218,33 @@ public:
         }); // !!ADD CONTEXT OBJECT HERE!!!!
     }
 
-           // Create a room
+    // Create a room
     void createRoom(
         const std::string& owner_id,
-        const ApiResponseCallback& onReply
-        ) {
-        QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms?username=" + owner_id));
+        const ApiResponseCallback& onReply)
+    {
+        QUrl url(QString::fromStdString(NW_HTTP + "/v1/rooms?username=" + owner_id));
         makeRequest(HttpMethod::POST, url, "", onReply);
     }
 
-           // Create a user connection
+    // Create a user connection
     void createUserConnection(
         const std::string& username,
         const std::string& room_id,
         const std::string& password,
-        const ApiResponseCallback& onReply
-        ) {
-        QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms/" + room_id + "/users?username=" + username));
+        const ApiResponseCallback& onReply)
+    {
+        QUrl url(QString::fromStdString(NW_HTTP + "/v1/rooms/" + room_id + "/users?username=" + username));
         makeRequest(HttpMethod::POST, url, password, onReply);
     }
 
-           // Get room state
+    // Get room state
     void getRoomState(
         const std::string& room_id,
         const std::string& password,
-        const ApiResponseCallback& onReply
-        ) {
-        QUrl url(QString::fromStdString("http://localhost:8080/v1/rooms/" + room_id));
+        const ApiResponseCallback& onReply)
+    {
+        QUrl url(QString::fromStdString(NW_HTTP + "/v1/rooms/" + room_id));
         makeRequest(HttpMethod::GET, url, password, onReply);
     }
 
