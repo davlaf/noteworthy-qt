@@ -2,52 +2,328 @@
 
 #include "CanvasObject.hpp"
 #include "RoomState.hpp"
+#include "tabletgraphicsview.hpp"
 #include <list>
-#include <mutex>
+#include "ClientWebSocketHandler.hpp"
+#include <qgraphicsitem.h>
+#include <qgraphicsscene.h>
+
+enum SelDragPoint
+{
+    NW,
+    N,
+    NE,
+    W,
+    E,
+    SW,
+    SE,
+    S
+};
 
 class Selection
 {
 public:
-    std::string owner_id;
+    std::shared_ptr<ClientWebSocketHandler> ws_handler;
     std::string room_id;
+
+           // Points that the user click/drags when making selection
+    QPointF init_sel_point;
+    bool selecting = false;
+
+           // i am going insane
+    double max_x = 0;
+    double max_y = 0;
+    double min_x = INFINITY;
+    double min_y = INFINITY;
+    double midpoint_x = 0;
+    double midpoint_y = 0;
+
+    QRectF bounding_box = QRectF(0,0,0,0);
+    QGraphicsRectItem* rect_item; // this one is for the bounding box
+    QGraphicsRectItem* drag_box; // this one is for when the user is creating the selection box
+
+           // Selection drag points
+    QRectF sel_NW = QRectF(0,0,5,5);
+    QRectF sel_NE = QRectF(0,0,5,5);
+    QRectF sel_SW = QRectF(0,0,5,5);
+    QRectF sel_SE = QRectF(0,0,5,5);
+    QRectF sel_N = QRectF(0,0,5,5);
+    QRectF sel_W = QRectF(0,0,5,5);
+    QRectF sel_E = QRectF(0,0,5,5);
+    QRectF sel_S = QRectF(0,0,5,5);
+
+           // there is probably a better way to do this
+    QGraphicsRectItem* sel_NW_canvas;
+    QGraphicsRectItem* sel_NE_canvas;
+    QGraphicsRectItem* sel_SW_canvas;
+    QGraphicsRectItem* sel_SE_canvas;
+    QGraphicsRectItem* sel_N_canvas;
+    QGraphicsRectItem* sel_E_canvas;
+    QGraphicsRectItem* sel_W_canvas;
+    QGraphicsRectItem* sel_S_canvas;
+
     uint64_t page_id;
 
+           // selection box styles
+    QPen sel_box_pen = QPen(Qt::PenStyle::SolidLine);
+    QPen drag_box_pen = QPen(Qt::PenStyle::SolidLine);
+
+           // this should be a map since we assume unique object ids
     std::list<uint64_t> sel_list;
 
-    void add_selection (std::list<uint64_t> obj_ids)
+    void initSelDragBox(std::shared_ptr<QGraphicsScene> scene, QPointF init_point)
     {
-        sel_list.splice(sel_list.end(), obj_ids);
-    }
-    void add_selection (uint64_t obj_id)
-    {
-        sel_list.push_back(obj_id);
+        qDebug() << "Real!!!!!!!!!!";
+        drag_box = scene->addRect(QRectF(init_point, init_point));
+        drag_box->setPen(drag_box_pen);
+        qDebug() << "Behold, the rectangle is summoned";
+        init_sel_point = init_point;
+        drag_box->show();
+        qDebug() << "Initial selection point: " << init_sel_point;
     }
 
-    void delete_selection ()
+    void updateSelDragBox(QPointF next_point)
+    {
+        drag_box->setRect(QRectF(QPointF(std::min(next_point.x(), init_sel_point.x()), std::min(next_point.y(), init_sel_point.y())),
+            QPointF(std::max(next_point.x(), init_sel_point.x()), std::max(next_point.y(), init_sel_point.y()))));
+    }
+
+    QRectF returnSelArea()
+    {
+        drag_box->hide();
+        return drag_box->rect();
+    }
+
+           // Called when selection is initially made
+    void drawSelBox(std::shared_ptr<QGraphicsScene> scene)
+    {
+        rect_item = scene->addRect(bounding_box,sel_box_pen);
+        sel_NW_canvas = scene->addRect(sel_NW, sel_box_pen);
+        sel_NE_canvas = scene->addRect(sel_NE, sel_box_pen);
+        sel_SW_canvas = scene->addRect(sel_SW, sel_box_pen);
+        sel_SE_canvas = scene->addRect(sel_SE, sel_box_pen);
+        sel_N_canvas = scene->addRect(sel_N, sel_box_pen);
+        sel_S_canvas = scene->addRect(sel_S, sel_box_pen);
+        sel_E_canvas = scene->addRect(sel_E, sel_box_pen);
+        sel_W_canvas = scene->addRect(sel_W, sel_box_pen);
+        qDebug() << "drawn";
+        updateSelBox();
+    }
+
+    void hideSelBox()
+    {
+        rect_item->hide();
+        sel_NW_canvas->hide();
+        sel_NE_canvas->hide();
+        sel_SW_canvas->hide();
+        sel_SE_canvas->hide();
+        sel_N_canvas->hide();
+        sel_S_canvas->hide();
+        sel_E_canvas->hide();
+        sel_W_canvas->hide();
+    }
+
+    void updateSelBox()
+    {
+        qDebug() << "Updating sel box bounds";
+        // first, recalculate size of selection bounding box
+        recalcSelBounds();
+        qDebug() << "Updating selection box";
+        // then, adjust bounding box dimensions
+        bounding_box.setTopLeft(QPointF(min_x, min_y));
+        bounding_box.setBottomRight(QPointF(max_x, max_y));
+                                                            // then, reposition drag points
+        sel_NW.moveTo(min_x-3, min_y-3);
+        sel_NE.moveTo(max_x-3, min_y-3);
+        sel_SW.moveTo(min_x-3, max_y-3);
+        sel_SE.moveTo(max_x-3, max_y-3);
+        sel_N.moveTo(min_x-3, min_y-3);
+        sel_E.moveTo(max_x-3, min_y-3);
+        sel_S.moveTo(min_x-3, max_y-3);
+        sel_W.moveTo(max_x-3, max_y-3);
+
+               // set changes to elements on canvas
+        rect_item->setRect(bounding_box);
+        sel_NW_canvas->setRect(sel_NW);
+        sel_NE_canvas->setRect(sel_NE);
+        sel_SW_canvas->setRect(sel_SW);
+        sel_SE_canvas->setRect(sel_SE);
+        sel_N_canvas->setRect(sel_N);
+        sel_E_canvas->setRect(sel_E);
+        sel_S_canvas->setRect(sel_S);
+        sel_W_canvas->setRect(sel_W);
+        qDebug() << "Updated to scene";
+
+        midpoint_x = (min_x+max_x)/2;
+        midpoint_y = (min_y+max_y)/2;
+    }
+
+           // recalculates bounds of selection box, should be called after every transformation
+    void recalcSelBounds()
+    {
+        qDebug() << "Recalculating sel box bounds";
+        if(sel_list.size() == 0){
+            this->min_y = 0;
+            this->min_x = 0;
+            this->max_y = 0;
+            this->max_x = 0;
+            hideSelBox();
+        }
+        else
+        {
+            qDebug() << "not empty";
+            for (std::list<uint64_t>::iterator it=sel_list.begin(); it != sel_list.end(); ++it)
+            {
+                uint64_t obj_id = *it;
+                qDebug() << "got id";
+                state.manipulatePage(page_id, [obj_id, this](Page& page)
+                    {
+                        qDebug() << "getting bounds for " << obj_id;
+                        page.manipulateObject(obj_id, [this](CanvasObject &object){
+                            auto bound_rect = object.item->boundingRect();
+                            this->min_x = std::min(this->min_x, bound_rect.left());
+                            this->max_x = std::max(this->max_x, bound_rect.right());
+                            this->min_y = std::min(this->min_y, bound_rect.top());
+                            this->max_y = std::max(this->max_y, bound_rect.bottom());
+                            qDebug() << min_x;
+                            qDebug() << min_y;
+                            qDebug() << max_x;
+                            qDebug() << max_y;
+                        });
+                    });
+            }
+        }
+    }
+
+    /* When a CanvasObject is selected, the midpoint of all CanvasObjects must be reevaluated when an object is added
+     * so that it isn't calculated every time a transform happens.
+     */
+    void addSelection (uint64_t obj_id)
+    {
+        if (obj_id != -1)
+            sel_list.push_back(obj_id);
+    }
+
+    void addSelection (std::list<uint64_t> obj_ids)
+    {
+        for (std::list<uint64_t>::iterator it=obj_ids.begin(); it != obj_ids.end(); ++it)
+        {
+            if (*it != -1)
+                sel_list.push_back(*it);
+        }
+    }
+
+           // remove everything from selection (or no longer selecting)
+    void clearSelection ()
     {
         for (std::list<uint64_t>::iterator it=sel_list.begin(); it != sel_list.end(); ++it)
         {
             uint64_t del_obj_id = *it;
             state.manipulatePage(page_id, [del_obj_id](Page& page)
-            {
-                page.deleteObject(del_obj_id);
-            });
+                {
+                    page.deleteObject(del_obj_id);
+                });
         }
-        clear_selection();
-    }
-
-    void clear_selection()
-    {
         sel_list.clear();
+        updateSelBox();
     }
 
+           // remove individual objects from selection
+    void removeSelection(uint64_t remove_id)
+    {
+        state.manipulatePage(page_id, [remove_id](Page& page)
+                             {
+                                 page.deleteObject(remove_id);
+                             });
+        sel_list.remove(remove_id);
+    }
 
+    void scaleSelection(enum::SelDragPoint dragPoint, double scale_factor_x, double scale_factor_y)
+    {
+        double scale_center_x;
+        double scale_center_y;
 
-    // Constructor
-    Selection(const std::string &room_id) : room_id(room_id) {};
+               // there is probably a better way to do this
+        switch(dragPoint)
+        {
+        case NW:
+            scale_center_x = this->min_x;
+            scale_center_y = this->min_y;
+            break;
+        case N:
+            scale_center_x = this->midpoint_x;
+            scale_center_y = this->min_y;
+            break;
+        case NE:
+            scale_center_x = this->max_x;
+            scale_center_y = this->min_y;
+            break;
+        case W:
+            scale_center_x = this->min_x;
+            scale_center_y = this->midpoint_y;
+            break;
+        case E:
+            scale_center_x = this->max_x;
+            scale_center_y = this->midpoint_y;
+            break;
+        case SW:
+            scale_center_x = this->min_x;
+            scale_center_y = this->max_y;
+            break;
+        case SE:
+            scale_center_x = this->max_x;
+            scale_center_y = this->max_y;
+            break;
+        case S:
+            scale_center_x = this->midpoint_x;
+            scale_center_y = this->max_y;
+            break;
+        }
 
-private:
+        for (std::list<uint64_t>::iterator it=sel_list.begin(); it != sel_list.end(); ++it)
+        {
+            uint64_t scale_id = *it;
+            state.manipulatePage(page_id, [scale_id, scale_center_x, scale_center_y, scale_factor_x, scale_factor_y, this](Page& page)
+                {
+                    page.manipulateObject(scale_id, [scale_id, scale_center_x, scale_center_y, scale_factor_x, scale_factor_y, this](CanvasObject &object){
+                        nlohmann::json scale_json;
+                        object.createScaleEvent(scale_json, scale_center_x,
+                            scale_center_y, scale_factor_x,
+                            scale_factor_y);
+                    });
+                });
+        }
+    }
 
+    void rotateSelection(double degrees)
+    {
+        for (std::list<uint64_t>::iterator it=sel_list.begin(); it != sel_list.end(); ++it)
+        {
+            uint64_t rotate_id = *it;
+            state.manipulatePage(page_id, [rotate_id, degrees, this](Page& page)
+                {
+                    page.manipulateObject(rotate_id, [this, degrees](CanvasObject &object){
+                        nlohmann::json rotate_json;
+                        object.createRotateEvent(rotate_json, this->midpoint_x, this->midpoint_y, degrees);
+                    });
+                });
+        }
+    }
+
+    void moveSelection(double distance_x, double distance_y)
+    {
+        for (std::list<uint64_t>::iterator it=sel_list.begin(); it != sel_list.end(); ++it)
+        {
+            uint64_t move_id = *it;
+            state.manipulatePage(page_id, [move_id, distance_x, distance_y](Page& page)
+                {
+                    page.manipulateObject(move_id, [distance_x, distance_y](CanvasObject &object)
+                                          {
+                                              object.applyMoveEvent(distance_x, distance_y);
+                                          });
+                });
+        }
+    }
 };
 
 #ifndef SELECTION_HPP

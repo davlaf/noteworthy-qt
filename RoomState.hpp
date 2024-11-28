@@ -22,7 +22,14 @@ public:
 
     uint64_t getObjectIdFromGraphicsItem(QGraphicsItem* item)
     {
-        return pointer_to_id_map.at(item);
+        try{
+            return pointer_to_id_map.at(item);
+        }
+        catch(const std::out_of_range& oor)
+        {
+            qDebug() << "Out of Range error";
+            return -1; // assume -1 is invalid
+        }
     }
 #endif
     enum PageEventType {

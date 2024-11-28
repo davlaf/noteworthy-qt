@@ -54,8 +54,16 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
         erase_path = std::make_unique<QPainterPath>(scene_pos);
         break;
     }
-    case TouchState::DRAG_SELECTION:
+    case TouchState::DRAG_SELECTION: {
+        selection.page_id = current_page_id;
+        qDebug() << "We selectin";
+        selection.initSelDragBox(state.getScene(current_page_id), scene_pos);
+        selection.selecting = true;
+        qDebug() << position << "\n";
+        break;
+    }
     case TouchState::DRAG_HANDLE:
+        selection.page_id = current_page_id;
         break;
     };
 }
@@ -141,8 +149,16 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
             ws_handler.sendEvent(event_json);
             ws_handler.handleEvent(event_json);
         }
+        break;
     }
-    case TouchState::DRAG_SELECTION:
+    case TouchState::DRAG_SELECTION: {
+        if (selection.selecting)
+        {
+            qDebug() << "We draggin now";
+            selection.updateSelDragBox(scene_pos);
+        }
+        break;
+    }
     case TouchState::DRAG_HANDLE:
         break;
     }
@@ -161,16 +177,16 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
     touch_state.removeTouch(id);
 
     erase_path = nullptr;
-    if (!(current_stroke))
-    {
-        qDebug() << "what?? release when there the stroke is null";
-        return;
-    }
 
     switch (touch_state.current_touch_action)
     {
     case TouchState::APPEND_STROKE:
     {
+        if (!(current_stroke))
+        {
+            qDebug() << "what?? release when there the stroke is null";
+            return;
+        }
         current_stroke->path.lineTo(scene_pos); // Extend the path to the new point
         nlohmann::json event_json;
         current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
@@ -181,9 +197,34 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
 
         current_stroke = nullptr;
         current_stroke_id = 0;
+        break;
     }
-    case TouchState::ERASE_STROKE:
-    case TouchState::DRAG_SELECTION:
+    case TouchState::ERASE_STROKE:{
+        break;
+    }
+    case TouchState::DRAG_SELECTION: {
+        selection.selecting = false;
+        qDebug() << "Deselected moment";
+        auto item_list = scene()->items(selection.drag_box->rect());
+        qDebug() << "we got da items (hopefully)";
+        std::list<uint64_t> sel_add;
+        for (auto item : item_list) {
+            qDebug() << "bruh moment";
+            state.manipulatePage(current_page_id, [item, &sel_add](Page& page){
+                //if(item != )
+                uint64_t object_id = page.getObjectIdFromGraphicsItem(item);
+                if (object_id != -1){
+                    sel_add.push_back(object_id);
+                    qDebug() << object_id;
+                }
+            });
+        }
+        selection.addSelection(sel_add);
+        selection.drag_box->hide();
+        touch_state.current_touch_action = TouchState::DRAG_HANDLE;
+        selection.drawSelBox(state.getScene(current_page_id));
+        break;
+    }
     case TouchState::DRAG_HANDLE:
         break;
     }
