@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1247</width>
-    <height>729</height>
+    <height>762</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -246,7 +246,7 @@ background-color: transparent;
 </string>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="pageTab">
                <attribute name="title">
@@ -275,8 +275,8 @@ background-color: transparent;
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>244</width>
-                        <height>535</height>
+                        <width>216</width>
+                        <height>526</height>
                        </rect>
                       </property>
                       <widget class="QWidget" name="verticalLayoutWidget">

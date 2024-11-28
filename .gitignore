@@ -2,3 +2,4 @@ build
 external
 .vscode
 CMakeLists.txt.user
+.DS_Store

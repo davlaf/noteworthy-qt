@@ -1,6 +1,7 @@
 #include "drawingroom.h"
 #include "AppNavigator.hpp"
 #include "RandomIdGenerator.hpp"
+#include "Symbol.hpp"
 #include "ui_drawingroom.h"
 #include "widget.h"
 #include <QTabBar> // Add this line
@@ -227,27 +228,27 @@ drawingRoom::drawingRoom(QWidget *parent)
     ui->symbol3->setIcon(icon14);
     ui->symbol3->setIconSize(QSize(70, 140)); // Set icon size if needed
 
-    QIcon icon15(":/png/png/Group 20.svg"); // Path to your SVG file in the resources or filesystem
+    QIcon icon15(":/png/png/battery.svg"); // Path to your SVG file in the resources or filesystem
     ui->symbol4->setIcon(icon15);
     ui->symbol4->setIconSize(QSize(70, 140)); // Set icon size if needed
 
-    QIcon icon16(":/png/png/Group 21.svg"); // Path to your SVG file in the resources or filesystem
+    QIcon icon16(":/png/png/diode.svg"); // Path to your SVG file in the resources or filesystem
     ui->symbol5->setIcon(icon16);
     ui->symbol5->setIconSize(QSize(70, 140)); // Set icon size if needed
 
-    QIcon icon17(":/png/png/Group 41.svg"); // Path to your SVG file in the resources or filesystem
+    QIcon icon17(":/png/png/switch.svg"); // Path to your SVG file in the resources or filesystem
     ui->symbol6->setIcon(icon17);
     ui->symbol6->setIconSize(QSize(70, 140)); // Set icon size if needed
 
-    QIcon icon18(":/png/png/Group 19.svg"); // Path to your SVG file in the resources or filesystem
+    QIcon icon18(":/png/png/ac_source.svg"); // Path to your SVG file in the resources or filesystem
     ui->symbol7->setIcon(icon18);
     ui->symbol7->setIconSize(QSize(70, 140)); // Set icon size if needed
 
-    QIcon icon19(":/png/png/const current source.svg"); // Path to your SVG file in the resources or filesystem
+    QIcon icon19(":/png/png/dc_source.svg"); // Path to your SVG file in the resources or filesystem
     ui->symbol8->setIcon(icon19);
     ui->symbol8->setIconSize(QSize(70, 140)); // Set icon size if needed
 
-    QIcon icon20(":/png/png/const voltage source.svg"); // Path to your SVG file in the resources or filesystem
+    QIcon icon20(":/png/png/current_source"); // Path to your SVG file in the resources or filesystem
     ui->symbol9->setIcon(icon20);
     ui->symbol9->setIconSize(QSize(70, 140)); // Set icon size if needed
 
@@ -903,41 +904,92 @@ void drawingRoom::on_shape9_clicked()
 {
 }
 
+
+void drawingRoom::createSymbol(Symbol::SymbolType type) {
+    Symbol resistor = Symbol(type);
+    uint64_t new_id = IDGenerator::newID();
+    resistor.object_id = new_id;
+    resistor.room_id = state.room_id;
+    resistor.page_id = ui->graphics->current_page_id;
+    resistor.owner_id = ui->graphics->user_id;
+
+    std::random_device rd;  // Seed for random number generator
+    std::mt19937 gen(rd()); // Mersenne Twister random number generator
+
+    std::uniform_int_distribution<> dist(0, 300);
+
+           // Generate two random numbers
+    double randomNumber1 = dist(gen)*1.5;
+    double randomNumber2 = dist(gen);
+
+    resistor.top_left = {randomNumber1, randomNumber2};
+    QSvgRenderer renderer(Symbol::symbolSvgPaths.at(type));
+    if (!renderer.isValid()) {
+        qDebug() << "SVG file is invalid for type:" << type;
+        return;
+    }
+    QSizeF dimensions = renderer.defaultSize(); // Get default size of the SVG
+    resistor.bottom_left = {
+        resistor.top_left[0],
+        resistor.top_left[1]+dimensions.height()
+    };
+    resistor.bottom_right = {
+        resistor.top_left[0]+dimensions.width(),
+        resistor.top_left[1]+dimensions.height()
+    };
+
+    nlohmann::json event;
+    resistor.createCreateEvent(event);
+
+    ui->graphics->ws_handler.sendEvent(event);
+    ui->graphics->ws_handler.handleEvent(event);
+}
+
 // add code once symbols are implemented
 void drawingRoom::on_symbol1_clicked()
 {
+    createSymbol(Symbol::CAPACITOR);
 }
 
 void drawingRoom::on_symbol2_clicked()
 {
+    createSymbol(Symbol::RESISTOR);
+
 }
 
 void drawingRoom::on_symbol3_clicked()
 {
+    createSymbol(Symbol::INDUCTOR);
 }
 
 void drawingRoom::on_symbol4_clicked()
 {
+    createSymbol(Symbol::BATTERY);
 }
 
 void drawingRoom::on_symbol5_clicked()
 {
+    createSymbol(Symbol::DIODE);
 }
 
 void drawingRoom::on_symbol6_clicked()
 {
+    createSymbol(Symbol::SWITCH);
 }
 
 void drawingRoom::on_symbol7_clicked()
 {
+    createSymbol(Symbol::CURRENT_SOURCE);
 }
 
 void drawingRoom::on_symbol8_clicked()
 {
+    createSymbol(Symbol::DC_SOURCE);
 }
 
 void drawingRoom::on_symbol9_clicked()
 {
+    createSymbol(Symbol::CURRENT_SOURCE);
 }
 
 void drawingRoom::on_copyCode_clicked()

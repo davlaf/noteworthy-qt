@@ -21,7 +21,7 @@ public:
         webSocket.abort();
     }
 
-    std::unique_ptr<CanvasObject> createCanvasObject(EventObjectType object_type, QGraphicsScene& scene, QColor color = QColor{255, 50, 50});
+    std::unique_ptr<CanvasObject> createCanvasObject(EventObjectType object_type, const nlohmann::json &event, QGraphicsScene& scene, QColor color = QColor{255, 50, 50});
 
 signals:
     void pageCreated(uint64_t page_id);

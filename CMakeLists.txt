@@ -28,6 +28,7 @@ include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
+find_package(Qt6 REQUIRED COMPONENTS SvgWidgets)
 find_package(Qt6 REQUIRED COMPONENTS WebSockets)
 find_package(Qt6 REQUIRED COMPONENTS Svg)
 
@@ -46,6 +47,7 @@ set(PROJECT_SOURCES
         drawingroom.cpp
         drawingroom.h
         drawingroom.ui
+        Symbol.hpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -67,6 +69,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         User.hpp
         SendableObject.hpp
         clickablegraphicsview.h
+        Symbol.hpp
+        Symbol.cpp
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET noteworthy-qt APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -91,6 +96,8 @@ target_link_libraries(noteworthy-qt PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(noteworthy-qt PRIVATE Qt${QT_VERSION_MAJOR}::WebSockets)
 
 target_link_libraries(noteworthy-qt PRIVATE Qt6::Svg)
+
+target_link_libraries(noteworthy-qt PRIVATE Qt6::SvgWidgets)
 
 add_dependencies(${PROJECT_NAME} NLOHMANN)
 

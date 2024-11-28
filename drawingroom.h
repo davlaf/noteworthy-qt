@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QGraphicsScene>
 #include <clickablegraphicsview.h>
+#include "Symbol.hpp"
 
 namespace Ui {
 class drawingRoom;
@@ -22,6 +23,7 @@ public:
     void setCodeLabel(const QString &codeText);
     void setButtonIconWithColor(QPushButton *button, const QString &svgPath, const QColor &color);
     void setUser(const QString &initial);
+    void createSymbol(Symbol::SymbolType type);
     std::string user_id;
     QGraphicsScene no_page_scene;
 

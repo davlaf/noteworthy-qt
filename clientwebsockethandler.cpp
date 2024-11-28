@@ -2,6 +2,7 @@
 #include "RoomState.hpp"
 
 #include "Stroke.hpp"
+#include "Symbol.hpp"
 #include <qgraphicsitem.h>
 #include <qwebsockethandshakeoptions.h>
 
@@ -56,7 +57,7 @@ void ClientWebSocketHandler::sendEvent(const nlohmann::json& event)
     webSocket.sendTextMessage(QString::fromStdString(event.dump()));
 }
 
-std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventObjectType object_type, QGraphicsScene& scene, QColor color)
+std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventObjectType object_type, const nlohmann::json &event, QGraphicsScene& scene, QColor color)
 {
     switch (object_type) {
     case STROKE: {
@@ -66,13 +67,18 @@ std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventOb
         QGraphicsPathItem* item = scene.addPath(path, color);
         // Create a Stroke using the current_path
         auto stroke = std::make_unique<Stroke>(path, item);
-        qDebug() << "created object:" << stroke.get();
 
         return std::move(stroke);
     }
-    case SYMBOL:
-        qDebug() << "Symbol creation not supported.";
-        break;
+    case SYMBOL: {
+        auto item_type = static_cast<Symbol::SymbolType>(event.at("symbol_type"));
+        auto symbol_svg = new QGraphicsSvgItem(Symbol::symbolSvgPaths.at(item_type));
+        scene.addItem(symbol_svg);
+
+        auto symbol = std::make_unique<Symbol>(item_type, symbol_svg);
+
+        return std::move(symbol);
+    }
     case SHAPE:
         qDebug() << "Shape creation not supported.";
         break;
@@ -82,7 +88,7 @@ std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventOb
     default:
         qDebug() << "Unsupported object type!";
     }
-    assert(false); // Unsupported object
+    throw std::runtime_error("unknown object type");
     return nullptr;
 }
 
@@ -183,7 +189,7 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json& event)
         switch (event_type) {
         case CanvasObject::CanvasObjectEventType::CREATE: {
             state.manipulatePage(event["page_id"], [this, event, object_type](Page& page) mutable {
-                std::unique_ptr<CanvasObject> object = createCanvasObject(object_type, *page.scene, stringToColor(event["owner_id"]));
+                std::unique_ptr<CanvasObject> object = createCanvasObject(object_type, event, *page.scene, stringToColor(event["owner_id"]));
                 object->fromJson(event);
                 page.addObject(std::move(object));
             });
