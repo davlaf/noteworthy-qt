@@ -1,6 +1,6 @@
 #include "ClientWebSocketHandler.hpp"
 #include "RoomState.hpp"
-
+#include "Shape.hpp"
 #include "Stroke.hpp"
 #include "Symbol.hpp"
 #include <qgraphicsitem.h>
@@ -57,7 +57,7 @@ void ClientWebSocketHandler::sendEvent(const nlohmann::json& event)
     webSocket.sendTextMessage(QString::fromStdString(event.dump()));
 }
 
-std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventObjectType object_type, const nlohmann::json &event, QGraphicsScene& scene, QColor color)
+std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventObjectType object_type, const nlohmann::json& event, QGraphicsScene& scene, QColor color)
 {
     switch (object_type) {
     case STROKE: {
@@ -74,17 +74,14 @@ std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventOb
         auto item_type = static_cast<Symbol::SymbolType>(event.at("symbol_type"));
         auto symbol_svg = new QGraphicsSvgItem(Symbol::symbolSvgPaths.at(item_type));
         scene.addItem(symbol_svg);
-
-        auto symbol = std::make_unique<Symbol>(item_type, symbol_svg);
-
-        return std::move(symbol);
+        return std::make_unique<Symbol>(item_type, symbol_svg);
     }
-    case SHAPE:
-        qDebug() << "Shape creation not supported.";
-        break;
-    case TEXT:
-        qDebug() << "Text creation not supported.";
-        break;
+    case SHAPE: {
+        auto item_type = static_cast<Shape::ShapeType>(event.at("shape_type"));
+        auto shape_svg = new QGraphicsSvgItem(Shape::shapeSvgPaths.at(item_type));
+        scene.addItem(shape_svg);
+        return std::make_unique<Shape>(item_type, shape_svg);
+    }
     default:
         qDebug() << "Unsupported object type!";
     }
@@ -104,6 +101,11 @@ std::vector<QColor> colors = {
 
 QColor stringToColor(const std::string& string)
 {
+    static const std::vector<QColor> colors = {
+        QColor { 255, 0, 0 }, QColor { 255, 127, 0 }, QColor { 0, 255, 0 },
+        QColor { 0, 0, 255 }, QColor { 75, 0, 130 }, QColor { 148, 0, 211 }
+    };
+
     int sum = 0;
     for (char c : string)
         sum += c;
@@ -223,5 +225,7 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json& event)
         }
         break;
     }
+    default:
+        qDebug() << "Unknown event type!";
     }
 }

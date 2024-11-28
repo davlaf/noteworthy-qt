@@ -7,6 +7,7 @@
 #include <QGraphicsScene>
 #include <clickablegraphicsview.h>
 #include "Symbol.hpp"
+#include "Shape.hpp"
 
 namespace Ui {
 class drawingRoom;
@@ -24,6 +25,7 @@ public:
     void setButtonIconWithColor(QPushButton *button, const QString &svgPath, const QColor &color);
     void setUser(const QString &initial);
     void createSymbol(Symbol::SymbolType type);
+    void createShape(Shape::ShapeType type);
     std::string user_id;
     QGraphicsScene no_page_scene;
 
@@ -118,6 +120,9 @@ private:
     Ui::drawingRoom *ui;
     int lastWidth = 0;
     QTimer *collapseCooldownTimer;
+    void showErrorMessage(const QString &message);
+    QGraphicsTextItem *errorTextItem = nullptr;
+
 };
 
 #endif // DRAWINGROOM_H

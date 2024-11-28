@@ -71,6 +71,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         clickablegraphicsview.h
         Symbol.hpp
         Symbol.cpp
+        Shape.hpp
+        Shape.cpp
 
     )
 # Define target properties for Android with Qt 6 as:

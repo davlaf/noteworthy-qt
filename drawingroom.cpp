@@ -25,6 +25,7 @@
 #include "RoomState.hpp"
 #include <QClipboard>
 #include <QApplication>
+#include "Shape.hpp"
 
 drawingRoom::drawingRoom(QWidget *parent)
     : QWidget(parent), ui(new Ui::drawingRoom)
@@ -252,39 +253,39 @@ drawingRoom::drawingRoom(QWidget *parent)
     ui->symbol9->setIcon(icon20);
     ui->symbol9->setIconSize(QSize(70, 140)); // Set icon size if needed
 
-    QIcon icon21(":/png/png/Rectangle 24.svg");
+    QIcon icon21(":/png/png/square.svg");
     ui->shape1->setIcon(icon21);
     ui->shape1->setIconSize(QSize(50, 50));
 
-    QIcon icon22(":/png/png/Ellipse 4.svg");
+    QIcon icon22(":/png/png/circle.svg");
     ui->shape2->setIcon(icon22);
     ui->shape2->setIconSize(QSize(50, 50));
 
-    QIcon icon23(":/png/png/Line 17.svg");
+    QIcon icon23(":/png/png/line.svg");
     ui->shape3->setIcon(icon23);
     ui->shape3->setIconSize(QSize(50, 50));
 
-    QIcon icon24(":/png/png/Ellipse 5.svg");
+    QIcon icon24(":/png/png/ellipse.svg");
     ui->shape4->setIcon(icon24);
     ui->shape4->setIconSize(QSize(100, 50));
 
-    QIcon icon25(":/png/png/Rectangle 25.svg");
+    QIcon icon25(":/png/png/rectangle.svg");
     ui->shape5->setIcon(icon25);
     ui->shape5->setIconSize(QSize(100, 50));
 
-    QIcon icon26(":/png/png/Arrow 1.svg");
+    QIcon icon26(":/png/png/arrow.svg");
     ui->shape6->setIcon(icon26);
     ui->shape6->setIconSize(QSize(100, 50));
 
-    QIcon icon27(":/png/png/Star 1.svg");
+    QIcon icon27(":/png/png/star.svg");
     ui->shape7->setIcon(icon27);
     ui->shape7->setIconSize(QSize(100, 50));
 
-    QIcon icon28(":/png/png/axis (2).svg");
+    QIcon icon28(":/png/png/2d_plot.svg");
     ui->shape8->setIcon(icon28);
     ui->shape8->setIconSize(QSize(100, 100));
 
-    QIcon icon29(":/png/png/axis.svg");
+    QIcon icon29(":/png/png/3d_plot.svg");
     ui->shape9->setIcon(icon29);
     ui->shape9->setIconSize(QSize(100, 100));
 
@@ -831,16 +832,36 @@ void drawingRoom::on_create_page_clicked()
 
 void drawingRoom::on_delete_page_clicked()
 {
-    // if after deleting page there are no pages left set scene to temporary scene
+    // Check if there are no pages
+    if (ui->graphics->current_page_id == 0) {
+        showErrorMessage("Error: No pages to delete.");
+        return;
+    }
+
     uint64_t current_page_id = ui->graphics->current_page_id;
 
     nlohmann::json json;
     state.manipulatePage(current_page_id, [&json](Page& page){
         page.createDeleteEvent(json);
     });
+
+           // Send the delete event
     ui->graphics->ws_handler.sendEvent(json);
     ui->graphics->ws_handler.handleEvent(json);
+
+           // Check if there are no more pages left
+    uint64_t first_page_id;
+    if (!state.getFirstPageId(first_page_id)) {
+        // Set the scene to the temporary scene if no pages are left
+        ui->graphics->current_page_id = 0;
+        ui->graphics->setScene(&no_page_scene);
+        return;
+    }
+
+           // Otherwise, select the first page
+    select_page(first_page_id);
 }
+
 
 void drawingRoom::on_previous_page_clicked()
 {
@@ -867,51 +888,149 @@ void drawingRoom::on_next_page_clicked()
     ui->graphics->current_page_id = next_page_id;
 }
 
+void drawingRoom::showErrorMessage(const QString &message) {
+    // Check if the errorTextItem already exists
+    if (!errorTextItem) {
+        // Create a new error text item
+        errorTextItem = no_page_scene.addText(message);
+        errorTextItem->setDefaultTextColor(Qt::red); // Set text color to red
+        QFont font = QApplication::font();
+        font.setPointSize(24);
+        font.setBold(true);
+        errorTextItem->setFont(font);
+    } else {
+        // Update the message if the text item already exists
+        errorTextItem->setPlainText(message);
+        errorTextItem->show(); // Ensure the message is visible
+    }
+
+           // Recalculate the bounding rectangle to center the text properly
+    QRectF textRect = errorTextItem->boundingRect();
+    QRectF sceneRect = no_page_scene.sceneRect();
+
+    errorTextItem->setPos(
+        (sceneRect.width() - textRect.width()) / 2, // Center horizontally
+        (sceneRect.height() / 2) + 70              // Adjust vertical position (below "Add a page to start!")
+        );
+
+           // Use a QTimer to hide the error message after 3 seconds
+    QTimer::singleShot(3000, this, [this]() {
+        if (errorTextItem) {
+            errorTextItem->hide();
+        }
+    });
+}
+
+
+
+void drawingRoom::createShape(Shape::ShapeType type) {
+
+    if (ui->graphics->current_page_id == 0) {
+        showErrorMessage("Error: No active page.");
+        return;
+    }
+
+    Shape shape = Shape(type);
+    uint64_t new_id = IDGenerator::newID();
+    shape.object_id = new_id;
+    shape.room_id = state.room_id;
+    shape.page_id = ui->graphics->current_page_id;
+    shape.owner_id = ui->graphics->user_id;
+
+    std::random_device rd;  // Seed for random number generator
+    std::mt19937 gen(rd()); // Mersenne Twister random number generator
+
+    std::uniform_int_distribution<> dist(0, 300);
+
+    double randomNumber1 = dist(gen)*1.5;
+    double randomNumber2 = dist(gen);
+
+    shape.top_left = {randomNumber1, randomNumber2};
+
+    QSvgRenderer renderer(Shape::shapeSvgPaths.at(type));
+    if (!renderer.isValid()) {
+        qDebug() << "SVG file is invalid for type:" << type;
+        return;
+    }
+
+    QSizeF dimensions = renderer.defaultSize(); // Get default size of the SVG
+    shape.bottom_left = {
+        shape.top_left[0],
+        shape.top_left[1]+dimensions.height()
+    };
+    shape.bottom_right = {
+        shape.top_left[0]+dimensions.width(),
+        shape.top_left[1]+dimensions.height()
+    };
+
+    nlohmann::json event;
+    shape.createCreateEvent(event);
+
+    ui->graphics->ws_handler.sendEvent(event);
+    ui->graphics->ws_handler.handleEvent(event);
+}
+
+
 // add shape fucntionality once done
 void drawingRoom::on_shape1_clicked()
 {
+    createShape(Shape::SQUARE);
 }
 
 void drawingRoom::on_shape2_clicked()
 {
+    createShape(Shape::CIRCLE);
 }
 
 void drawingRoom::on_shape3_clicked()
 {
+    createShape(Shape::LINE);
 }
 
 void drawingRoom::on_shape4_clicked()
 {
+    createShape(Shape::ELLIPSE);
 }
 
 void drawingRoom::on_shape5_clicked()
 {
+    createShape(Shape::RECTANGLE);
 }
 
 void drawingRoom::on_shape6_clicked()
 {
+    createShape(Shape::ARROW);
 }
 
 void drawingRoom::on_shape7_clicked()
 {
+    createShape(Shape::STAR);
 }
 
 void drawingRoom::on_shape8_clicked()
 {
+    createShape(Shape::TWOD_PLOT);
 }
 
 void drawingRoom::on_shape9_clicked()
 {
+    createShape(Shape::THREED_PLOT);
 }
 
 
 void drawingRoom::createSymbol(Symbol::SymbolType type) {
-    Symbol resistor = Symbol(type);
+
+    if (ui->graphics->current_page_id == 0) {
+        showErrorMessage("Error: No active page.");
+        return;
+    }
+
+    Symbol symbol = Symbol(type);
     uint64_t new_id = IDGenerator::newID();
-    resistor.object_id = new_id;
-    resistor.room_id = state.room_id;
-    resistor.page_id = ui->graphics->current_page_id;
-    resistor.owner_id = ui->graphics->user_id;
+    symbol.object_id = new_id;
+    symbol.room_id = state.room_id;
+    symbol.page_id = ui->graphics->current_page_id;
+    symbol.owner_id = ui->graphics->user_id;
 
     std::random_device rd;  // Seed for random number generator
     std::mt19937 gen(rd()); // Mersenne Twister random number generator
@@ -922,24 +1041,24 @@ void drawingRoom::createSymbol(Symbol::SymbolType type) {
     double randomNumber1 = dist(gen)*1.5;
     double randomNumber2 = dist(gen);
 
-    resistor.top_left = {randomNumber1, randomNumber2};
+    symbol.top_left = {randomNumber1, randomNumber2};
     QSvgRenderer renderer(Symbol::symbolSvgPaths.at(type));
     if (!renderer.isValid()) {
         qDebug() << "SVG file is invalid for type:" << type;
         return;
     }
     QSizeF dimensions = renderer.defaultSize(); // Get default size of the SVG
-    resistor.bottom_left = {
-        resistor.top_left[0],
-        resistor.top_left[1]+dimensions.height()
+    symbol.bottom_left = {
+        symbol.top_left[0],
+        symbol.top_left[1]+dimensions.height()
     };
-    resistor.bottom_right = {
-        resistor.top_left[0]+dimensions.width(),
-        resistor.top_left[1]+dimensions.height()
+    symbol.bottom_right = {
+        symbol.top_left[0]+dimensions.width(),
+        symbol.top_left[1]+dimensions.height()
     };
 
     nlohmann::json event;
-    resistor.createCreateEvent(event);
+    symbol.createCreateEvent(event);
 
     ui->graphics->ws_handler.sendEvent(event);
     ui->graphics->ws_handler.handleEvent(event);
