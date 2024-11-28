@@ -20,15 +20,23 @@ enum SelDragPoint
     S
 };
 
+enum TransformType
+{
+    NONE,
+    TRANSLATE,
+    SCALE
+};
+
 class Selection
 {
 public:
-    std::shared_ptr<ClientWebSocketHandler> ws_handler;
     std::string room_id;
 
            // Points that the user click/drags when making selection
     QPointF init_sel_point;
     bool selecting = false;
+    TransformType current_transform = NONE;
+    QPointF previous_move;
 
            // i am going insane
     double max_x = 0;
@@ -128,6 +136,9 @@ public:
         qDebug() << "Updating sel box bounds";
         // first, recalculate size of selection bounding box
         recalcSelBounds();
+        midpoint_x = (min_x+max_x)/2;
+        midpoint_y = (min_y+max_y)/2;
+
         qDebug() << "Updating selection box";
         // then, adjust bounding box dimensions
         bounding_box.setTopLeft(QPointF(min_x, min_y));
@@ -137,10 +148,10 @@ public:
         sel_NE.moveTo(max_x-3, min_y-3);
         sel_SW.moveTo(min_x-3, max_y-3);
         sel_SE.moveTo(max_x-3, max_y-3);
-        sel_N.moveTo(min_x-3, min_y-3);
-        sel_E.moveTo(max_x-3, min_y-3);
-        sel_S.moveTo(min_x-3, max_y-3);
-        sel_W.moveTo(max_x-3, max_y-3);
+        sel_N.moveTo(midpoint_x, min_y-3);
+        sel_E.moveTo(max_x-3, midpoint_y);
+        sel_S.moveTo(midpoint_x, max_y-3);
+        sel_W.moveTo(min_x-3, midpoint_y);
 
                // set changes to elements on canvas
         rect_item->setRect(bounding_box);
@@ -153,14 +164,16 @@ public:
         sel_S_canvas->setRect(sel_S);
         sel_W_canvas->setRect(sel_W);
         qDebug() << "Updated to scene";
-
-        midpoint_x = (min_x+max_x)/2;
-        midpoint_y = (min_y+max_y)/2;
     }
 
            // recalculates bounds of selection box, should be called after every transformation
     void recalcSelBounds()
     {
+        this->max_x = 0;
+        this->max_y = 0;
+        this->min_x = INFINITY;
+        this->min_y = INFINITY;
+
         qDebug() << "Recalculating sel box bounds";
         if(sel_list.size() == 0){
             this->min_y = 0;
@@ -180,7 +193,9 @@ public:
                     {
                         qDebug() << "getting bounds for " << obj_id;
                         page.manipulateObject(obj_id, [this](CanvasObject &object){
+                            qDebug() << "we are manipulating page now";
                             auto bound_rect = object.item->boundingRect();
+                            qDebug() << "got bounding rect";
                             this->min_x = std::min(this->min_x, bound_rect.left());
                             this->max_x = std::max(this->max_x, bound_rect.right());
                             this->min_y = std::min(this->min_y, bound_rect.top());
@@ -214,7 +229,7 @@ public:
     }
 
            // remove everything from selection (or no longer selecting)
-    void clearSelection ()
+    void deleteSelection ()
     {
         for (std::list<uint64_t>::iterator it=sel_list.begin(); it != sel_list.end(); ++it)
         {
@@ -225,7 +240,6 @@ public:
                 });
         }
         sel_list.clear();
-        updateSelBox();
     }
 
            // remove individual objects from selection
@@ -310,18 +324,25 @@ public:
         }
     }
 
-    void moveSelection(double distance_x, double distance_y)
+    void moveSelection(double distance_x, double distance_y, ClientWebSocketHandler &ws_handler)
     {
+        nlohmann::json event_json;
+        qDebug() << "moving " << distance_x;
+        qDebug() << "moving " << distance_y;
         for (std::list<uint64_t>::iterator it=sel_list.begin(); it != sel_list.end(); ++it)
         {
             uint64_t move_id = *it;
-            state.manipulatePage(page_id, [move_id, distance_x, distance_y](Page& page)
+            state.manipulatePage(page_id, [move_id, &event_json, distance_x, distance_y](Page& page)
                 {
-                    page.manipulateObject(move_id, [distance_x, distance_y](CanvasObject &object)
+                    page.manipulateObject(move_id, [&event_json, distance_x, distance_y](CanvasObject &object)
                                           {
-                                              object.applyMoveEvent(distance_x, distance_y);
+                                              object.createMoveEvent(event_json, distance_x, distance_y);
                                           });
                 });
+            qDebug() << "sending event";
+            ws_handler.sendEvent(event_json);
+            ws_handler.handleEvent(event_json);
+            qDebug() << "event sent";
         }
     }
 };

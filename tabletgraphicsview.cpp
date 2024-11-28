@@ -64,6 +64,49 @@ void TabletGraphicsView::handleTouch(QPointF position, int id)
     }
     case TouchState::DRAG_HANDLE:
         selection.page_id = current_page_id;
+        auto clicked = scene()->items(scene_pos);
+        for (auto item : clicked) {
+            qDebug() << "checking for clicked handle";
+
+            // i would like to apologize in advance
+            if(item == selection.sel_N_canvas) {
+                qDebug() << "north drag box";
+            }
+            else if (item == selection.sel_E_canvas) {
+                qDebug() << "E";
+            }
+            else if (item == selection.sel_S_canvas){
+                qDebug() << "S";
+            }
+            else if (item == selection.sel_W_canvas){
+                qDebug() << "W";
+            }
+            else if (item == selection.sel_NW_canvas){
+                qDebug() << "NW";
+            }
+            else if (item == selection.sel_NE_canvas){
+                qDebug() << "NE";
+            }
+            else if (item == selection.sel_SW_canvas){
+                qDebug() << "SW";
+            }
+            else if (item == selection.sel_SE_canvas){
+                qDebug() << "SE";
+            }
+            else if (item == selection.rect_item){
+                qDebug() << "box";
+                if(selection.current_transform == NONE){
+                    qDebug() << "we are translating now";
+                    selection.previous_move = scene_pos;
+                    selection.current_transform = TRANSLATE;
+                }
+            }
+        }
+        if (selection.current_transform == NONE){
+            qDebug() << "exit selection";
+            selection.hideSelBox();
+            selection.sel_list.clear();
+        }
         break;
     };
 }
@@ -160,6 +203,24 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
         break;
     }
     case TouchState::DRAG_HANDLE:
+        switch(selection.current_transform)
+        {
+        case NONE:{
+            break;
+        }
+        case TRANSLATE:{
+            selection.hideSelBox();
+            qDebug() << "currently translating";
+            selection.moveSelection(scene_pos.x()-selection.previous_move.x(), scene_pos.y()-selection.previous_move.y(), this->ws_handler);
+            qDebug() << scene_pos.x()-selection.previous_move.x();
+            qDebug() << scene_pos.y()-selection.previous_move.y();
+            selection.previous_move = scene_pos;
+            break;
+        }
+        case SCALE:{
+            break;
+        }
+        }
         break;
     }
 }
@@ -204,28 +265,41 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
     }
     case TouchState::DRAG_SELECTION: {
         selection.selecting = false;
-        qDebug() << "Deselected moment";
+        qDebug() << "we no longer dragging";
         auto item_list = scene()->items(selection.drag_box->rect());
         qDebug() << "we got da items (hopefully)";
         std::list<uint64_t> sel_add;
+
         for (auto item : item_list) {
-            qDebug() << "bruh moment";
             state.manipulatePage(current_page_id, [item, &sel_add](Page& page){
                 //if(item != )
                 uint64_t object_id = page.getObjectIdFromGraphicsItem(item);
                 if (object_id != -1){
                     sel_add.push_back(object_id);
-                    qDebug() << object_id;
+                    qDebug() << "now adding " << object_id;
                 }
             });
         }
         selection.addSelection(sel_add);
+        qDebug() << "successfully added";
         selection.drag_box->hide();
-        touch_state.current_touch_action = TouchState::DRAG_HANDLE;
-        selection.drawSelBox(state.getScene(current_page_id));
+        if(selection.sel_list.size() > 0)
+        {
+            qDebug() << "there is at least 1 element selected";
+            touch_state.current_touch_action = TouchState::DRAG_HANDLE;
+            selection.drawSelBox(state.getScene(current_page_id));
+        }
         break;
     }
     case TouchState::DRAG_HANDLE:
+        if (selection.sel_list.empty()){
+            touch_state.current_touch_action = TouchState::DRAG_SELECTION;
+        }
+        else{
+            selection.current_transform = NONE;
+            selection.updateSelBox();
+            selection.drawSelBox(state.getScene(current_page_id));
+        }
         break;
     }
 }
