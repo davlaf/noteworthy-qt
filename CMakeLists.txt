@@ -48,6 +48,7 @@ set(PROJECT_SOURCES
         drawingroom.h
         drawingroom.ui
         Symbol.hpp
+        hosts.hpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

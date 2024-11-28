@@ -3,6 +3,7 @@
 
 #include "Stroke.hpp"
 #include "Symbol.hpp"
+#include "hosts.hpp"
 #include <qgraphicsitem.h>
 #include <qwebsockethandshakeoptions.h>
 
@@ -19,8 +20,7 @@ void ClientWebSocketHandler::openConnection(std::string username, std::string ro
 {
     QWebSocketHandshakeOptions options;
     options.setSubprotocols({ "echo-protocol" });
-    std::string url_string = "ws://localhost:8081?username="+username+"&room_id="+room_id;
-    // std::string url_string = "wss://nw-ws.howdoesthiseven.work?username="+username+"&room_id="+room_id;
+    std::string url_string = NW_WS + "?username=" + username + "&room_id=" + room_id;
     webSocket.open(QUrl::fromUserInput(QString::fromStdString(url_string)), options);
 }
 
@@ -57,7 +57,7 @@ void ClientWebSocketHandler::sendEvent(const nlohmann::json& event)
     webSocket.sendTextMessage(QString::fromStdString(event.dump()));
 }
 
-std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventObjectType object_type, const nlohmann::json &event, QGraphicsScene& scene, QColor color)
+std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventObjectType object_type, const nlohmann::json& event, QGraphicsScene& scene, QColor color)
 {
     switch (object_type) {
     case STROKE: {
