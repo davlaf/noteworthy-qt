@@ -1,9 +1,7 @@
 #include "tabletgraphicsview.hpp"
 #include "RoomState.hpp"
 #include <QWebSocketHandshakeOptions>
-#include "EventTypeEnums.hpp"
 #include "RandomIdGenerator.hpp"
-#include "drawingroom.h"
 
 #include "Stroke.hpp"
 
@@ -130,13 +128,22 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
         for (auto item : item_list) {
             qDebug() << "moved!";
             // Remove the item from the scene
+            bool was_real_object = false;
             nlohmann::json event_json;
-            state.manipulatePage(current_page_id, [item, &event_json](Page& page){
+            state.manipulatePage(current_page_id, [&was_real_object, item, &event_json](Page& page){
                 uint64_t object_id = page.getObjectIdFromGraphicsItem(item);
+                if (object_id == 0) {
+                    return;
+                }
                 page.manipulateObject(object_id, [&event_json](CanvasObject& object){
                     object.createDeleteEvent(event_json);
                 });
+                was_real_object = true;
             });
+
+            if (!was_real_object) {
+                continue;
+            }
 
             ws_handler.sendEvent(event_json);
             ws_handler.handleEvent(event_json);

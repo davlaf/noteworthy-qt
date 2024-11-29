@@ -44,10 +44,7 @@ public:
 
     void displayScene(std::shared_ptr<QGraphicsScene> scene)
     {
-
         this->setScene(scene.get());
-        qDebug() << "width:" << this->width();
-        qDebug() << "height:" << this->height();
     }
 
     QPointF centerPoint;

@@ -1,4 +1,5 @@
 #include "ClientWebSocketHandler.hpp"
+#include "AppNavigator.hpp"
 #include "RoomState.hpp"
 
 #include "Stroke.hpp"
@@ -10,36 +11,47 @@
 ClientWebSocketHandler::ClientWebSocketHandler(QObject* parent)
     : QObject { parent }
 {
-    connect(&webSocket, &QWebSocket::connected, this, &ClientWebSocketHandler::onConnected);
-    connect(&webSocket, &QWebSocket::disconnected, this, &ClientWebSocketHandler::closed);
-    connect(&webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred),
-        this, &ClientWebSocketHandler::onError); // Handle WebSocket errors
+    connect(this, &ClientWebSocketHandler::startConnection, this, &ClientWebSocketHandler::openConnection);
 }
 
 void ClientWebSocketHandler::openConnection(std::string username, std::string room_id)
 {
+    closeWebSocket();
+    webSocket = std::make_unique<QWebSocket>();
+    webSocket->setMaxAllowedIncomingFrameSize(10000000);
+    webSocket->setOutgoingFrameSize(10000000);
+    connect(webSocket.get(), &QWebSocket::connected, this, &ClientWebSocketHandler::onConnected);
+    connect(webSocket.get(), &QWebSocket::disconnected, this, &ClientWebSocketHandler::closed);
+    connect(webSocket.get(), QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred),
+        this, &ClientWebSocketHandler::onError); // Handle WebSocket errors
+    this->username = username;
+    this->room_id = room_id;
     QWebSocketHandshakeOptions options;
     options.setSubprotocols({ "echo-protocol" });
     std::string url_string = NW_WS + "?username=" + username + "&room_id=" + room_id;
-    webSocket.open(QUrl::fromUserInput(QString::fromStdString(url_string)), options);
+    webSocket->open(QUrl::fromUserInput(QString::fromStdString(url_string)), options);
 }
 
 void ClientWebSocketHandler::onConnected()
 {
     qDebug() << "WebSocket connected";
-    connect(&webSocket, &QWebSocket::textMessageReceived,
+    connect(webSocket.get(), &QWebSocket::textMessageReceived,
         this, &ClientWebSocketHandler::onTextMessageReceived);
 }
 
 void ClientWebSocketHandler::closed()
 {
-    qDebug() << "closed!!";
+    qDebug() << "WebSocket closed and cleaned up! Error:" << webSocket->errorString();
+
+    closeWebSocket(); // Ensures the socket is fully cleaned up
+    emit startConnection(this->username, state.room_id);
 }
 
 void ClientWebSocketHandler::onError(QAbstractSocket::SocketError error)
 {
-    qDebug() << "WebSocket error occurred:" << webSocket.errorString();
-    qDebug() << "Error code:" << error;
+    qDebug() << "WebSocket error occurred:" << error;
+    closeWebSocket(); // Ensures the socket is fully cleaned up
+    emit startConnection(this->username, state.room_id);
 }
 
 void ClientWebSocketHandler::onTextMessageReceived(QString message)
@@ -54,7 +66,10 @@ void ClientWebSocketHandler::onTextMessageReceived(QString message)
 
 void ClientWebSocketHandler::sendEvent(const nlohmann::json& event)
 {
-    webSocket.sendTextMessage(QString::fromStdString(event.dump()));
+    if (webSocket.get() == nullptr) {
+        return;
+    }
+    webSocket->sendTextMessage(QString::fromStdString(event.dump()));
 }
 
 std::unique_ptr<CanvasObject> ClientWebSocketHandler::createCanvasObject(EventObjectType object_type, const nlohmann::json& event, QGraphicsScene& scene, QColor color)
@@ -111,6 +126,20 @@ QColor stringToColor(const std::string& string)
     return colors[sum % colors.size()];
 }
 
+QPixmap base64ToPixmap(const QString base64String)
+{
+    // Step 1: Decode the base64 string into a QByteArray
+    QByteArray byteArray = QByteArray::fromBase64(base64String.toUtf8());
+
+           // Step 2: Load the decoded byte array into a QPixmap
+    QPixmap pixmap;
+    if (!pixmap.loadFromData(byteArray)) {
+        throw std::runtime_error("error loading byte array decoded from base64");
+    }
+
+    return pixmap;
+}
+
 void ClientWebSocketHandler::handleEvent(const nlohmann::json& event)
 {
     if (event["room_id"] != state.room_id) {
@@ -150,10 +179,44 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json& event)
             emit pageCreated(event["page_id"]);
             break;
         }
+        case Page::PageEventType::INSERT_PDF: {
+            qDebug() << "event page id: " << std::to_string(uint64_t(event["page_id"]));
+            state.applyInsertPDFPageEvent(event);
+            state.manipulatePage(event["page_id"], [&](Page& page) {
+                QPixmap pixmap;
+                try {
+                    pixmap = base64ToPixmap(QString::fromStdString(event["base64_image"]));
+                } catch (std::exception) {
+                    return;
+                }
+
+                // Assuming the scene size is 1000x700
+                int sceneWidth = 1000;
+                int sceneHeight = 700;
+
+                // Assuming pixmap is already loaded and page.pixmap is a QGraphicsPixmapItem
+                QGraphicsPixmapItem* pixmapItem = page.scene->addPixmap(pixmap);
+                pixmapItem->setTransformationMode(Qt::SmoothTransformation);
+                pixmapItem->setScale(1.25);
+
+                // Calculate the center position
+                int x = (sceneWidth - pixmap.width()*1.25) / 2;
+                int y = (sceneHeight - pixmap.height()*1.25) / 2;
+
+                // Set the pixmap's position to the center
+                pixmapItem->setPos(x, y);
+
+                // Now the pixmap is centered in the scene
+                page.pixmap = pixmapItem;
+            });
+            emit pageCreated(event["page_id"]);
+            break;
+        }
         default: {
             state.manipulatePage(event["page_id"], [&](Page& page) {
                 page.applyEvent(event);
             });
+            break;
         }
         }
 
@@ -221,6 +284,10 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json& event)
             break;
         }
         }
+        break;
+    }
+    case RESET: {
+        navigator->goToRoomPageJoin(state.room_id, username, state.password);
         break;
     }
     }
