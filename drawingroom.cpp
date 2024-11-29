@@ -637,7 +637,8 @@ void drawingRoom::select_page(uint64_t page_id)
         [&page_id](const auto& pair) { return pair.first == page_id; });
 
     if (it == thumbnailList.end()) {
-        throw "page not found!";
+        navigator->goToRoomPageJoin(state.room_id, ui->graphics->user_id, state.password);
+        return;
     }
 
     ui->graphics->current_page_id = it->first;
@@ -785,52 +786,6 @@ void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
 // {
 //     navigator->goToHomepage();
 // }
-
-void drawingRoom::on_create_page_clicked()
-{
-    nlohmann::json json;
-    uint64_t new_id = IDGenerator::newID();
-    Page page;
-    page.page_id = new_id;
-    page.room_id = state.room_id;
-    page.createInsertPageEvent(json, ui->graphics->current_page_id);
-    ui->graphics->ws_handler.sendEvent(json);
-    ui->graphics->ws_handler.handleEvent(json);
-    state.manipulatePage(new_id, [this](Page& page) { ui->graphics->displayScene(page.scene); });
-    ui->graphics->current_page_id = new_id;
-}
-
-void drawingRoom::on_delete_page_clicked()
-{
-    // Check if there are no pages
-    if (ui->graphics->current_page_id == 0) {
-        showErrorMessage("Error: No pages to delete.");
-        return;
-    }
-
-    uint64_t current_page_id = ui->graphics->current_page_id;
-
-    nlohmann::json json;
-    state.manipulatePage(current_page_id, [&json](Page& page) {
-        page.createDeleteEvent(json);
-    });
-
-    // Send the delete event
-    ui->graphics->ws_handler.sendEvent(json);
-    ui->graphics->ws_handler.handleEvent(json);
-
-    // Check if there are no more pages left
-    uint64_t first_page_id;
-    if (!state.getFirstPageId(first_page_id)) {
-        // Set the scene to the temporary scene if no pages are left
-        ui->graphics->current_page_id = 0;
-        ui->graphics->setScene(&no_page_scene);
-        return;
-    }
-
-    // Otherwise, select the first page
-    select_page(first_page_id);
-}
 
 // void drawingRoom::on_previous_page_clicked()
 // {

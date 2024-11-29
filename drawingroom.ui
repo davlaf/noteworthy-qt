@@ -241,13 +241,23 @@ border-radius: 20px;
             <item>
              <widget class="QTabWidget" name="sidebartabs_2">
               <property name="styleSheet">
-               <string notr="true">border: none;
+               <string notr="true">
+QTabWidget {
+	border-radius: 0px;
+}
+
+QPushButton {
+	border-radius: 30px;
+}
+
+
+border: none;
 background-color: rgba(238, 254, 236, 1);
-border-radius: 0px;
+
 </string>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="pageTab">
                <property name="styleSheet">
