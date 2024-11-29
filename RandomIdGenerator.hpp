@@ -2,9 +2,8 @@
 #include <cstdint>
 #include <random>
 
-namespace IDGenerator
-{
+namespace IDGenerator {
 
-    uint64_t newID();
+uint64_t newID();
 
 } // namespace IDGenerator

@@ -74,6 +74,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         Symbol.cpp
         Shape.hpp
         Shape.cpp
+        load_file.hpp
 
     )
 # Define target properties for Android with Qt 6 as:
@@ -95,11 +96,8 @@ else()
 endif()
 
 target_link_libraries(noteworthy-qt PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-
 target_link_libraries(noteworthy-qt PRIVATE Qt${QT_VERSION_MAJOR}::WebSockets)
-
 target_link_libraries(noteworthy-qt PRIVATE Qt6::Svg)
-
 target_link_libraries(noteworthy-qt PRIVATE Qt6::SvgWidgets)
 
 add_dependencies(${PROJECT_NAME} NLOHMANN)

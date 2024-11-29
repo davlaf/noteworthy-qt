@@ -1,34 +1,37 @@
 #include "drawingroom.h"
 #include "AppNavigator.hpp"
 #include "RandomIdGenerator.hpp"
-#include "Symbol.hpp"
-#include "ui_drawingroom.h"
-#include "widget.h"
-#include <QTabBar> // Add this line
-#include <QPushButton>
-#include <QIcon>
-#include <QSvgRenderer>
-#include <QPixmap>
-#include <QPainter>
-#include <QPropertyAnimation>
-#include <QTabWidget>
-#include <QMessageBox>
-#include <QHBoxLayout> // For horizontal layout
-#include <QTimer>
-#include "widget.h"
-#include <QSvgRenderer>
-#include <QPixmap>
-#include <QPainter>
-#include <QTransform>
-#include <QIcon>
-#include <QPushButton>
 #include "RoomState.hpp"
-#include <QClipboard>
-#include <QApplication>
 #include "Shape.hpp"
+#include "Symbol.hpp"
+#include "load_file.hpp"
+#include "ui_drawingroom.h"
+#include <QApplication>
+#include <QBuffer>
+#include <QByteArray>
+#include <QClipboard>
+#include <QDebug>
+#include <QFile>
+#include <QFileDialog>
+#include <QHBoxLayout> // For horizontal layout
+#include <QIcon>
+#include <QImage>
+#include <QMessageBox>
+#include <QPainter>
+#include <QPixmap>
+#include <QPropertyAnimation>
+#include <QPushButton>
+#include <QString>
+#include <QStringList>
+#include <QSvgRenderer>
+#include <QTabBar> // Add this line
+#include <QTabWidget>
+#include <QTimer>
+#include <QTransform>
 
-drawingRoom::drawingRoom(QWidget *parent)
-    : QWidget(parent), ui(new Ui::drawingRoom)
+drawingRoom::drawingRoom(QWidget* parent)
+    : QWidget(parent)
+    , ui(new Ui::drawingRoom)
 {
     ui->setupUi(this);
 
@@ -40,7 +43,7 @@ drawingRoom::drawingRoom(QWidget *parent)
     customFont.setPointSize(30); // Set font size
 
     // Create the text item
-    QGraphicsTextItem *textItem = no_page_scene.addText("Add a page to start!", customFont);
+    QGraphicsTextItem* textItem = no_page_scene.addText("Add a page to start!", customFont);
 
     // Set the text color to rgba(74, 160, 60, 1)
     QColor textColor(74, 160, 60, 255); // RGBA with alpha fully opaque
@@ -49,7 +52,7 @@ drawingRoom::drawingRoom(QWidget *parent)
     // Center the text item within the scene
     QRectF textRect = textItem->boundingRect();
     textItem->setPos(
-        (no_page_scene.sceneRect().width() - textRect.width()) / 2,        // Center horizontally
+        (no_page_scene.sceneRect().width() - textRect.width()) / 2, // Center horizontally
         (no_page_scene.sceneRect().height() - 100 - textRect.height()) / 2 // Center vertically
     );
 
@@ -75,8 +78,7 @@ drawingRoom::drawingRoom(QWidget *parent)
     collapseCooldownTimer->setSingleShot(true); // Only triggers once per cooldown
 
     // Re-enable the collapse button when the timer expires
-    connect(collapseCooldownTimer, &QTimer::timeout, this, [this]()
-            { ui->collapse->setEnabled(true); });
+    connect(collapseCooldownTimer, &QTimer::timeout, this, [this]() { ui->collapse->setEnabled(true); });
 
     ui->sidebartabs_2->tabBar()->setVisible(false);
 
@@ -289,19 +291,19 @@ drawingRoom::drawingRoom(QWidget *parent)
     ui->shape9->setIcon(icon29);
     ui->shape9->setIconSize(QSize(100, 100));
 
-    QIcon icon30(":/png/png/delete.svg");
-    ui->setting1->setIcon(icon30);
+    QIcon icon31(":/png/png/add_circle.svg");
+    ui->setting1->setIcon(icon31);
     ui->setting1->setIconSize(QSize(45, 45));
 
-    QIcon icon31(":/png/png/add_circle.svg");
-    ui->setting2->setIcon(icon31);
+    QIcon icon32(":/png/png/upload_file.svg");
+    ui->setting2->setIcon(icon32);
     ui->setting2->setIconSize(QSize(45, 45));
 
-    QIcon icon32(":/png/png/upload_file.svg");
-    ui->setting3->setIcon(icon32);
+    QIcon icon30(":/png/png/delete.svg");
+    ui->setting3->setIcon(icon30);
     ui->setting3->setIconSize(QSize(45, 45));
 }
-void drawingRoom::setNameLabel(const QString &name)
+void drawingRoom::setNameLabel(const QString& name)
 {
     ui->name->setText(name); // Set the label in Widget
 }
@@ -318,19 +320,18 @@ void drawingRoom::on_collapse_clicked()
     if (!ui->collapse->isEnabled())
         return; // Return if button is disabled
 
-    ui->collapse->setEnabled(false);   // Disable button for cooldown
+    ui->collapse->setEnabled(false); // Disable button for cooldown
     collapseCooldownTimer->start(300); // Start the 300ms cooldown timer
 
-    QPropertyAnimation *animationMin = new QPropertyAnimation(ui->sidebar, "minimumWidth");
-    QPropertyAnimation *animationMax = new QPropertyAnimation(ui->sidebar, "maximumWidth");
+    QPropertyAnimation* animationMin = new QPropertyAnimation(ui->sidebar, "minimumWidth");
+    QPropertyAnimation* animationMax = new QPropertyAnimation(ui->sidebar, "maximumWidth");
 
     animationMin->setDuration(300);
     animationMax->setDuration(300);
 
     static QPoint originalPos; // Store the original position for reparenting
 
-    if (ui->sidebar->width() > 80)
-    { // If sidebar is currently expanded
+    if (ui->sidebar->width() > 80) { // If sidebar is currently expanded
         lastWidth = ui->sidebar->width();
         animationMin->setStartValue(280);
         animationMin->setEndValue(80); // Collapse to 60 width
@@ -341,13 +342,11 @@ void drawingRoom::on_collapse_clicked()
 
         animationMin->start(QAbstractAnimation::DeleteWhenStopped);
         animationMax->start(QAbstractAnimation::DeleteWhenStopped);
-        ui->collapse->setStyleSheet(
-            "background-color: transparent"
+        // ui->collapse->setStyleSheet(
+        //     "background-color: transparent"
+        // );
 
-        );
-
-        QTimer::singleShot(300, this, [this]()
-                           {
+        QTimer::singleShot(300, this, [this]() {
             ui->collapse->setParent( this);  // Reparent to the main window or a different parent
             ui->collapse->move(mapFromGlobal(originalPos));  // Move to original global position
 
@@ -360,16 +359,13 @@ void drawingRoom::on_collapse_clicked()
                     }
                 }
             } });
-    }
-    else
-    { // If sidebar is currently collapsed
+    } else { // If sidebar is currently collapsed
         // Set the collapse button's parent
-        ui->collapse->setParent(ui->widget_8);
+        ui->collapse->setParent(ui->button_bar);
 
-        // Get the horizontal layout from widget_8
-        QHBoxLayout *layout = qobject_cast<QHBoxLayout *>(ui->widget_8->layout());
-        if (layout)
-        {
+        // Get the horizontal layout from button_bar
+        QHBoxLayout* layout = qobject_cast<QHBoxLayout*>(ui->button_bar->layout());
+        if (layout) {
             // Insert the collapse button at the front of the layout
             layout->insertWidget(0, ui->collapse); // Insert at index 0 to place it at the front
         }
@@ -381,10 +377,8 @@ void drawingRoom::on_collapse_clicked()
         animationMax->setStartValue(80);
         animationMax->setEndValue(280);
 
-        for (QObject *child : ui->sidebar->children())
-        {
-            if (QWidget *widget = qobject_cast<QWidget *>(child))
-            {
+        for (QObject* child : ui->sidebar->children()) {
+            if (QWidget* widget = qobject_cast<QWidget*>(child)) {
                 widget->setVisible(true); // Show children
             }
         }
@@ -394,17 +388,17 @@ void drawingRoom::on_collapse_clicked()
     }
 }
 
-void drawingRoom::setCodeLabel(const QString &codeText)
+void drawingRoom::setCodeLabel(const QString& codeText)
 {
     ui->code->setText(codeText); // `codeLabel` is the QLabel in `drawingRoom`
 }
 
-void drawingRoom::setUser(const QString &initial)
+void drawingRoom::setUser(const QString& initial)
 {
     ui->user1->setText(initial); // `codeLabel` is the QLabel in `drawingRoom`
 }
 
-void drawingRoom::setButtonIconWithColor(QPushButton *button, const QString &svgPath, const QColor &color)
+void drawingRoom::setButtonIconWithColor(QPushButton* button, const QString& svgPath, const QColor& color)
 {
     // Load the SVG renderer
     QSvgRenderer renderer(svgPath);
@@ -435,6 +429,7 @@ void drawingRoom::setButtonIconWithColor(QPushButton *button, const QString &svg
 
 void drawingRoom::on_leaveRoom_clicked()
 {
+    ui->graphics->ws_handler.closeWebSocket();
     navigator->goToHomepage(QString::fromStdString(user_id));
 }
 
@@ -581,11 +576,12 @@ void drawingRoom::on_settings_clicked()
                                "}");
 }
 
-void clearLayout(QVBoxLayout* layout) {
+void clearLayout(QVBoxLayout* layout)
+{
     if (!layout)
         return;
 
-           // Iterate through all the items in the layout
+    // Iterate through all the items in the layout
     while (QLayoutItem* item = layout->takeAt(0)) {
         qDebug() << "DELETE THUMBNAIL!!!!!!!!!!!!!! <<<<<<";
         // If the item contains a widget, delete it
@@ -615,19 +611,16 @@ void drawingRoom::initialize(std::string initial_room)
     clearLayout(ui->thumbnailScrollableLayout);
 
     nlohmann::json event_list = nlohmann::json::parse(initial_room);
-    for (auto &event : event_list)
-    {
+    for (auto& event : event_list) {
         ui->graphics->ws_handler.handleEvent(event);
     }
 
-
-    ui->graphics->ws_handler.openConnection(user_id, state.room_id);
+    emit ui->graphics->ws_handler.startConnection(user_id, state.room_id);
     ui->code->setText(QString::fromStdString(state.room_id));
-    setNameLabel(QString::fromStdString(state.owner_id+"'s Room"));
+    setNameLabel(QString::fromStdString(state.owner_id + "'s Room"));
 
     uint64_t first_page_id;
-    if (!state.getFirstPageId(first_page_id))
-    {
+    if (!state.getFirstPageId(first_page_id)) {
         ui->graphics->current_page_id = 0;
         return;
     }
@@ -641,11 +634,9 @@ void drawingRoom::select_page(uint64_t page_id)
     auto it = std::find_if(
         thumbnailList.begin(),
         thumbnailList.end(),
-        [&page_id](const auto &pair)
-        { return pair.first == page_id; });
+        [&page_id](const auto& pair) { return pair.first == page_id; });
 
-    if (it == thumbnailList.end())
-    {
+    if (it == thumbnailList.end()) {
         throw "page not found!";
     }
 
@@ -653,8 +644,7 @@ void drawingRoom::select_page(uint64_t page_id)
 
     ui->graphics->displayScene(state.getScene(it->first));
 
-    for (auto &thumbnail : thumbnailList)
-    {
+    for (auto& thumbnail : thumbnailList) {
         thumbnail.second->setStyleSheet("background-color: white; "
                                         "border: 3px solid rgba(174,243,163,1); "
                                         "border-radius: 15px");
@@ -692,54 +682,42 @@ void drawingRoom::handleCreatePageUIChange(uint64_t page_id)
     // iterate over all the pages ids until you find prev page id
     // then std::list::insert the page at that position
     // add the clickable graphics view to the scrollable list view
-
-    qDebug() << "Entering handleCreatePageUIChange, page ID:" << page_id;
+    qDebug() << "handlingCreatePageUIChange" << page_id;
 
     // get the page
-    state.manipulatePage(page_id, [this, page_id](Page &page)
-         {
-             qDebug() << "Entering manipulatePage, page ID:" << page_id;
+    state.manipulatePage(page_id, [this, page_id](Page& page) {
+        auto new_thumbnail = createThumbnail(page.scene);
 
-             auto new_thumbnail = createThumbnail(page.scene);
+        uint64_t prev_page_id;
+        size_t index = 0;
 
-             uint64_t prev_page_id;
-             qDebug() << "Before getPrevPageId initiation, page ID:" << page_id;
-             size_t index = 0;
+        if (!state.getPrevPageId(page_id, prev_page_id)) {
+            prev_page_id = 0;
+        }
 
-             if (!state.getPrevPageId(page_id, prev_page_id))
-             {
-                 prev_page_id = 0;
-             }
+        if (prev_page_id == 0) {
+            thumbnailList.push_front({ page_id, new_thumbnail });
+        } else {
+            auto it = std::find_if(
+                thumbnailList.begin(),
+                thumbnailList.end(),
+                [&prev_page_id](const auto& pair) { return pair.first == prev_page_id; });
 
-             if (prev_page_id == 0)
-             {
-                 thumbnailList.push_front({page_id, new_thumbnail});
-             }
-             else
-             {
-                 auto it = std::find_if(
-                     thumbnailList.begin(),
-                     thumbnailList.end(),
-                     [&prev_page_id](const auto &pair)
-                     { return pair.first == prev_page_id; });
+            if (it == thumbnailList.end()) {
+                throw "page not found!";
+            }
 
-                 if (it == thumbnailList.end())
-                 {
-                     throw "page not found!";
-                 }
+            index = std::distance(thumbnailList.begin(), std::next(it));
+            thumbnailList.insert(std::next(it), { page_id, new_thumbnail });
+        }
 
-                 index = std::distance(thumbnailList.begin(), std::next(it));
-                 thumbnailList.insert(std::next(it), {page_id, new_thumbnail});
-             }
+        auto layout = ui->thumbnailScrollableLayout->layout();
+        static_cast<QBoxLayout*>(layout)->insertWidget(index, new_thumbnail.get());
 
-             auto layout = ui->thumbnailScrollableLayout->layout();
-             static_cast<QBoxLayout *>(layout)->insertWidget(index, new_thumbnail.get());
+        connect(new_thumbnail.get(), &ClickableGraphicsView::clicked, this, [this, page_id]() { select_page(page_id); });
 
-             connect(new_thumbnail.get(), &ClickableGraphicsView::clicked, this, [this, page_id]()
-                     { select_page(page_id); });
-
-             select_page(page_id);
-         });
+        // select_page(page_id);
+    });
 };
 void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
 {
@@ -747,8 +725,7 @@ void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
     // until you find the correct page
     // remove it from the qt scrollable view
     // remove it from this list
-    if (ui->graphics->current_page_id == 0)
-    {
+    if (ui->graphics->current_page_id == 0) {
         return;
     }
 
@@ -756,11 +733,9 @@ void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
     auto it = std::find_if(
         thumbnailList.begin(),
         thumbnailList.end(),
-        [&page_id](const auto &pair)
-        { return pair.first == page_id; });
+        [&page_id](const auto& pair) { return pair.first == page_id; });
 
-    if (it == thumbnailList.end())
-    {
+    if (it == thumbnailList.end()) {
         throw "thumbnail to be deleted doesn't exist!!";
     }
 
@@ -779,20 +754,16 @@ void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
     uint64_t prev_page_id, next_page_id;
     bool go_to_empty_page = true;
 
-    if (state.getPrevPageId(current_page_id, prev_page_id))
-    {
+    if (state.getPrevPageId(current_page_id, prev_page_id)) {
         page_id_to_go_to = prev_page_id;
         go_to_empty_page = false;
-    }
-    else if (state.getNextPageId(current_page_id, next_page_id))
-    {
+    } else if (state.getNextPageId(current_page_id, next_page_id)) {
         page_id_to_go_to = next_page_id;
         go_to_empty_page = false;
     }
 
     // Handle the empty page scenario
-    if (go_to_empty_page)
-    {
+    if (go_to_empty_page) {
         ui->graphics->current_page_id = 0;
         ui->graphics->setScene(&no_page_scene);
         return;
@@ -825,8 +796,7 @@ void drawingRoom::on_create_page_clicked()
     page.createInsertPageEvent(json, ui->graphics->current_page_id);
     ui->graphics->ws_handler.sendEvent(json);
     ui->graphics->ws_handler.handleEvent(json);
-    state.manipulatePage(new_id, [this](Page &page)
-                         { ui->graphics->displayScene(page.scene); });
+    state.manipulatePage(new_id, [this](Page& page) { ui->graphics->displayScene(page.scene); });
     ui->graphics->current_page_id = new_id;
 }
 
@@ -841,15 +811,15 @@ void drawingRoom::on_delete_page_clicked()
     uint64_t current_page_id = ui->graphics->current_page_id;
 
     nlohmann::json json;
-    state.manipulatePage(current_page_id, [&json](Page& page){
+    state.manipulatePage(current_page_id, [&json](Page& page) {
         page.createDeleteEvent(json);
     });
 
-           // Send the delete event
+    // Send the delete event
     ui->graphics->ws_handler.sendEvent(json);
     ui->graphics->ws_handler.handleEvent(json);
 
-           // Check if there are no more pages left
+    // Check if there are no more pages left
     uint64_t first_page_id;
     if (!state.getFirstPageId(first_page_id)) {
         // Set the scene to the temporary scene if no pages are left
@@ -858,37 +828,37 @@ void drawingRoom::on_delete_page_clicked()
         return;
     }
 
-           // Otherwise, select the first page
+    // Otherwise, select the first page
     select_page(first_page_id);
 }
 
+// void drawingRoom::on_previous_page_clicked()
+// {
+//     uint64_t prev_page_id;
+//     if (!state.getPrevPageId(ui->graphics->current_page_id, prev_page_id))
+//     {
+//         return;
+//     }
+//     state.manipulatePage(prev_page_id, [this](Page &page)
+//                          { ui->graphics->displayScene(page.scene); });
+//     ui->graphics->current_page_id = prev_page_id;
+// }
 
-void drawingRoom::on_previous_page_clicked()
+// void drawingRoom::on_next_page_clicked()
+// {
+//     // find the current page in the list
+//     uint64_t next_page_id;
+//     if (!state.getNextPageId(ui->graphics->current_page_id, next_page_id))
+//     {
+//         return;
+//     }
+//     state.manipulatePage(next_page_id, [this](Page &page)
+//                          { ui->graphics->displayScene(page.scene); });
+//     ui->graphics->current_page_id = next_page_id;
+// }
+
+void drawingRoom::showErrorMessage(const QString& message)
 {
-    uint64_t prev_page_id;
-    if (!state.getPrevPageId(ui->graphics->current_page_id, prev_page_id))
-    {
-        return;
-    }
-    state.manipulatePage(prev_page_id, [this](Page &page)
-                         { ui->graphics->displayScene(page.scene); });
-    ui->graphics->current_page_id = prev_page_id;
-}
-
-void drawingRoom::on_next_page_clicked()
-{
-    // find the current page in the list
-    uint64_t next_page_id;
-    if (!state.getNextPageId(ui->graphics->current_page_id, next_page_id))
-    {
-        return;
-    }
-    state.manipulatePage(next_page_id, [this](Page &page)
-                         { ui->graphics->displayScene(page.scene); });
-    ui->graphics->current_page_id = next_page_id;
-}
-
-void drawingRoom::showErrorMessage(const QString &message) {
     // Check if the errorTextItem already exists
     if (!errorTextItem) {
         // Create a new error text item
@@ -904,16 +874,16 @@ void drawingRoom::showErrorMessage(const QString &message) {
         errorTextItem->show(); // Ensure the message is visible
     }
 
-           // Recalculate the bounding rectangle to center the text properly
+    // Recalculate the bounding rectangle to center the text properly
     QRectF textRect = errorTextItem->boundingRect();
     QRectF sceneRect = no_page_scene.sceneRect();
 
     errorTextItem->setPos(
         (sceneRect.width() - textRect.width()) / 2, // Center horizontally
-        (sceneRect.height() / 2) + 70              // Adjust vertical position (below "Add a page to start!")
-        );
+        (sceneRect.height() / 2) + 70 // Adjust vertical position (below "Add a page to start!")
+    );
 
-           // Use a QTimer to hide the error message after 3 seconds
+    // Use a QTimer to hide the error message after 3 seconds
     QTimer::singleShot(3000, this, [this]() {
         if (errorTextItem) {
             errorTextItem->hide();
@@ -921,9 +891,8 @@ void drawingRoom::showErrorMessage(const QString &message) {
     });
 }
 
-
-
-void drawingRoom::createShape(Shape::ShapeType type) {
+void drawingRoom::createShape(Shape::ShapeType type)
+{
 
     if (ui->graphics->current_page_id == 0) {
         showErrorMessage("Error: No active page.");
@@ -937,15 +906,15 @@ void drawingRoom::createShape(Shape::ShapeType type) {
     shape.page_id = ui->graphics->current_page_id;
     shape.owner_id = ui->graphics->user_id;
 
-    std::random_device rd;  // Seed for random number generator
+    std::random_device rd; // Seed for random number generator
     std::mt19937 gen(rd()); // Mersenne Twister random number generator
 
     std::uniform_int_distribution<> dist(0, 300);
 
-    double randomNumber1 = dist(gen)*1.5;
+    double randomNumber1 = dist(gen) * 1.5;
     double randomNumber2 = dist(gen);
 
-    shape.top_left = {randomNumber1, randomNumber2};
+    shape.top_left = { randomNumber1, randomNumber2 };
 
     QSvgRenderer renderer(Shape::shapeSvgPaths.at(type));
     if (!renderer.isValid()) {
@@ -956,11 +925,11 @@ void drawingRoom::createShape(Shape::ShapeType type) {
     QSizeF dimensions = renderer.defaultSize(); // Get default size of the SVG
     shape.bottom_left = {
         shape.top_left[0],
-        shape.top_left[1]+dimensions.height()
+        shape.top_left[1] + dimensions.height()
     };
     shape.bottom_right = {
-        shape.top_left[0]+dimensions.width(),
-        shape.top_left[1]+dimensions.height()
+        shape.top_left[0] + dimensions.width(),
+        shape.top_left[1] + dimensions.height()
     };
 
     nlohmann::json event;
@@ -969,7 +938,6 @@ void drawingRoom::createShape(Shape::ShapeType type) {
     ui->graphics->ws_handler.sendEvent(event);
     ui->graphics->ws_handler.handleEvent(event);
 }
-
 
 // add shape fucntionality once done
 void drawingRoom::on_shape1_clicked()
@@ -1017,8 +985,8 @@ void drawingRoom::on_shape9_clicked()
     createShape(Shape::THREED_PLOT);
 }
 
-
-void drawingRoom::createSymbol(Symbol::SymbolType type) {
+void drawingRoom::createSymbol(Symbol::SymbolType type)
+{
 
     if (ui->graphics->current_page_id == 0) {
         showErrorMessage("Error: No active page.");
@@ -1032,16 +1000,16 @@ void drawingRoom::createSymbol(Symbol::SymbolType type) {
     symbol.page_id = ui->graphics->current_page_id;
     symbol.owner_id = ui->graphics->user_id;
 
-    std::random_device rd;  // Seed for random number generator
+    std::random_device rd; // Seed for random number generator
     std::mt19937 gen(rd()); // Mersenne Twister random number generator
 
     std::uniform_int_distribution<> dist(0, 300);
 
-           // Generate two random numbers
-    double randomNumber1 = dist(gen)*1.5;
+    // Generate two random numbers
+    double randomNumber1 = dist(gen) * 1.5;
     double randomNumber2 = dist(gen);
 
-    symbol.top_left = {randomNumber1, randomNumber2};
+    symbol.top_left = { randomNumber1, randomNumber2 };
     QSvgRenderer renderer(Symbol::symbolSvgPaths.at(type));
     if (!renderer.isValid()) {
         qDebug() << "SVG file is invalid for type:" << type;
@@ -1050,11 +1018,11 @@ void drawingRoom::createSymbol(Symbol::SymbolType type) {
     QSizeF dimensions = renderer.defaultSize(); // Get default size of the SVG
     symbol.bottom_left = {
         symbol.top_left[0],
-        symbol.top_left[1]+dimensions.height()
+        symbol.top_left[1] + dimensions.height()
     };
     symbol.bottom_right = {
-        symbol.top_left[0]+dimensions.width(),
-        symbol.top_left[1]+dimensions.height()
+        symbol.top_left[0] + dimensions.width(),
+        symbol.top_left[1] + dimensions.height()
     };
 
     nlohmann::json event;
@@ -1073,7 +1041,6 @@ void drawingRoom::on_symbol1_clicked()
 void drawingRoom::on_symbol2_clicked()
 {
     createSymbol(Symbol::RESISTOR);
-
 }
 
 void drawingRoom::on_symbol3_clicked()
@@ -1116,6 +1083,47 @@ void drawingRoom::on_copyCode_clicked()
     QString codeText = ui->code->text();
 
     // Get the clipboard and set the text
-    QClipboard *clipboard = QApplication::clipboard();
+    QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText(codeText);
+}
+
+void drawingRoom::on_setting1_clicked()
+{
+    nlohmann::json json;
+    uint64_t new_id = IDGenerator::newID();
+    Page page;
+    page.page_id = new_id;
+    page.room_id = state.room_id;
+    page.createInsertPageEvent(json, ui->graphics->current_page_id);
+    ui->graphics->ws_handler.sendEvent(json);
+    ui->graphics->ws_handler.handleEvent(json);
+    state.manipulatePage(new_id, [this](Page& page) { ui->graphics->displayScene(page.scene); });
+    ui->graphics->current_page_id = new_id;
+    select_page(new_id);
+}
+
+void drawingRoom::on_setting3_clicked()
+{
+    // if after deleting page there are no pages left set scene to temporary scene
+    uint64_t current_page_id = ui->graphics->current_page_id;
+
+    if (current_page_id == 0) {
+        return;
+    }
+
+    nlohmann::json json;
+    state.manipulatePage(current_page_id, [&json](Page& page) {
+        page.createDeleteEvent(json);
+    });
+    ui->graphics->ws_handler.sendEvent(json);
+    ui->graphics->ws_handler.handleEvent(json);
+}
+
+void drawingRoom::on_setting2_clicked()
+{
+#ifdef __EMSCRIPTEN__ // if its webassembly
+    open_file_and_process(state.room_id.c_str(), std::to_string(ui->graphics->current_page_id).c_str(), NW_HTTP.c_str());
+#endif
+
+    qDebug() << "function jover";
 }

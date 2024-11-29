@@ -15,10 +15,14 @@ public:
     explicit ClientWebSocketHandler(QObject *parent = nullptr);
     void handleEvent(const nlohmann::json& event);
     void sendEvent(const nlohmann::json& event);
-    void openConnection(std::string username, std::string room_id);
     void closeWebSocket() {
         qDebug() << "close the websocket!!!";
-        webSocket.abort();
+        if (webSocket.get() == nullptr) {
+            return;
+        }
+
+        webSocket->abort();
+        webSocket = nullptr;
     }
 
     std::unique_ptr<CanvasObject> createCanvasObject(EventObjectType object_type, const nlohmann::json &event, QGraphicsScene& scene, QColor color = QColor{255, 50, 50});
@@ -26,13 +30,18 @@ public:
 signals:
     void pageCreated(uint64_t page_id);
     void pageDeleted(uint64_t page_id);
+    void startConnection(std::string username, std::string room_id);
 
 private Q_SLOTS:
+    void openConnection(std::string username, std::string room_id);
     void onConnected();
     void closed();
     void onTextMessageReceived(QString message);
     void onError(QAbstractSocket::SocketError error);
 
+
 private:
-    QWebSocket webSocket;
+    std::unique_ptr<QWebSocket> webSocket;
+    std::string username;
+    std::string room_id;
 };

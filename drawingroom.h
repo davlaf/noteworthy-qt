@@ -70,14 +70,6 @@ private slots:
 
     void on_settings_clicked();
 
-    void on_create_page_clicked();
-
-    void on_delete_page_clicked();
-
-    void on_previous_page_clicked();
-
-    void on_next_page_clicked();
-
     void on_shape1_clicked();
 
     void on_shape2_clicked();
@@ -115,6 +107,12 @@ private slots:
     void on_symbol9_clicked();
 
     void on_copyCode_clicked();
+
+    void on_setting1_clicked();
+
+    void on_setting3_clicked();
+
+    void on_setting2_clicked();
 
 private:
     Ui::drawingRoom *ui;
