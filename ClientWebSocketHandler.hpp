@@ -31,6 +31,7 @@ signals:
     void pageCreated(uint64_t page_id);
     void pageDeleted(uint64_t page_id);
     void startConnection(std::string username, std::string room_id);
+    void usersUpdated();
 
 private Q_SLOTS:
     void openConnection(std::string username, std::string room_id);

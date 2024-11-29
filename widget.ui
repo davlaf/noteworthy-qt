@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1612</width>
-    <height>613</height>
+    <height>637</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -436,30 +436,6 @@ font: 35pt;
                </property>
                <property name="text">
                 <string>Create room</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="getfile">
-               <property name="font">
-                <font>
-                 <pointsize>-1</pointsize>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">color: rgba(0, 0, 0, 0.7);</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset theme="QIcon::ThemeIcon::DocumentOpen"/>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>100</width>
-                 <height>100</height>
-                </size>
                </property>
               </widget>
              </item>

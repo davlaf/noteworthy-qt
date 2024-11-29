@@ -3,7 +3,6 @@
 #include "CanvasObject.hpp"
 #include <cstdint>
 #include <list>
-#include <map>
 #include <memory> // Include for smart pointers
 #include <mutex>
 #ifdef NOTEWORTHY_QT
@@ -12,7 +11,6 @@
 #endif
 
 #include "User.hpp"
-#include "nlohmann/ordered_map.hpp"
 
 class Page : public SendableObject {
 public:
@@ -27,6 +25,12 @@ public:
         if (pointer_to_id_map.count(item) == 0) {
             return -1;
         }
+
+               // selecting anything other than stroke is broken
+        // if (object_map.at(pointer_to_id_map.at(item))->getObjectType() != STROKE) {
+        //     return -1;
+        // }
+
         return pointer_to_id_map.at(item);
     }
 #endif
@@ -84,6 +88,10 @@ public:
         std::unique_ptr<CanvasObject> object = std::move(object_map.at(id));
         object_map.erase(id);
         return object;
+    }
+
+    bool hasObject(uint64_t id) {
+        return object_map.count(id) != 0;
     }
 
     void addObject(std::unique_ptr<CanvasObject> object)
@@ -192,14 +200,23 @@ public:
             nlohmann::json user_info;
             user->createCreateEvent(user_info);
             json.push_back(user_info);
+            nlohmann::json connection_info;
+            if (user->is_connected) {
+                user->createConnectEvent(connection_info);
+                json.push_back(connection_info);
+            }
         }
 
-        // then add create page event each page and add all the objects of that
-        // page add last page first, adding the next pages at position 0 so they
-        // are in order
+               // then add create page event each page and add all the objects of that
+               // page add last page first, adding the next pages at position 0 so they
+               // are in order
         forEachReverse([this, &json](Page& page) mutable {
             nlohmann::json create_page_json;
-            page.createInsertPageEvent(create_page_json, 0);
+            if (page.base64_image == "") {
+                page.createInsertPageEvent(create_page_json, 0);
+            } else {
+                page.createInsertPDFPageEvent(create_page_json, 0, page.base64_image);
+            }
             json.push_back(create_page_json);
 
             page.forEach([this, &json](CanvasObject& object) mutable {
@@ -305,7 +322,7 @@ public:
             return;
         }
 
-        // Insert page after previous page in the order
+               // Insert page after previous page in the order
         auto it = std::find(page_order.begin(), page_order.end(), previous_page_id);
         if (it == page_order.end()) {
             throw std::runtime_error("page to add after not found");
@@ -333,7 +350,7 @@ public:
         manipulator(*users.at(username)); // Pass to manipulator by reference
     }
 
-    // DANGEROUS!!!
+           // DANGEROUS!!!
     User* getUserPtr(const std::string& username)
     {
         std::lock_guard<std::mutex> lock(room_mutex);

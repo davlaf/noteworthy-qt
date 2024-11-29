@@ -38,16 +38,15 @@ public:
 
     void initialize(std::string initial_room = "[]");
 
-
     void handleCreatePageUIChange(uint64_t page_id);
 
     void handleDeletePageUIChange(uint64_t page_id);
 
+    void handleUserUpdate();
+
     void select_page(uint64_t page_id);
 
     void on_output_room_clicked();
-
-
 
     void on_exit_clicked();
 
@@ -115,6 +114,10 @@ private slots:
     void on_setting2_clicked();
 
     void on_select_clicked();
+
+    void on_KickButton_clicked();
+
+    void on_PasswordSetButton_clicked();
 
 private:
     Ui::drawingRoom *ui;

@@ -156,6 +156,17 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
             return;
         }
 
+        bool stroke_exists = false;
+        state.manipulatePage(current_page_id, [&](Page& page){
+            stroke_exists = page.hasObject(current_stroke->object_id);
+        });
+
+        if (!stroke_exists) {
+            current_stroke = nullptr;
+            current_stroke_id = 0;
+            return;
+        }
+
         current_stroke->path.lineTo(scene_pos); // Extend the path to the new point
         nlohmann::json event_json;
         current_stroke->createAppendEvent(event_json, {{scene_pos.x(), scene_pos.y()}}); // Update the QGraphicsPathItem
@@ -282,8 +293,12 @@ void TabletGraphicsView::handleRelease(QPointF position, int id)
                 //if(item != )
                 uint64_t object_id = page.getObjectIdFromGraphicsItem(item);
                 if (object_id != -1){
-                    sel_add.push_back(object_id);
-                    qDebug() << "now adding " << object_id;
+                    page.manipulateObject(object_id, [&](CanvasObject& object){
+                        if (object.getObjectType() == STROKE) {
+                            sel_add.push_back(object_id);
+                            qDebug() << "now adding " << object_id;
+                        }
+                    });
                 }
             });
         }

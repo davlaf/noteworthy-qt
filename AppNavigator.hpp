@@ -141,7 +141,7 @@ public:
                 break;
             case Forbidden:
                 if (responseString == "Incorrect Password") {
-                    homepage.setErrorText("Incorrect Password");
+                    loading_room_page.setErrorText("Incorrect Password");
                 } else {
                     homepage.setErrorText("You are no longer allowed in this room");
                 }

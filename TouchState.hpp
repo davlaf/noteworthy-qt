@@ -1,10 +1,8 @@
-#pragma once
-
-#include <list>
-#include <qdebug.h>
-#include <qline.h>
-#include <qpoint.h>
+#include <QElapsedTimer>
+#include <QLineF>
+#include <QDebug>
 #include <map>
+#include <list>
 
 class TouchState {
 
@@ -20,26 +18,28 @@ public:
     void print() {
         qDebug() << "TouchState:";
         for (int id : touch_priority) {
-            QPointF point = touch_points.at(id);
+            QPointF point = touch_points.at(id).first;
             qDebug() << "ID: " << id << ", Location: ("
-               << point.x() << ", " << point.y() << ")";
+                     << point.x() << ", " << point.y() << ")";
         }
     }
 
     void updateTouch(QPointF point, int id) {
-#ifdef __EMSCRIPTEN__ // if its webassembly
+#ifdef __EMSCRIPTEN__ // if it's WebAssembly
         if (id == 0) {
             return;
         }
 #endif
         if (touch_points.count(id) == 0) {
             touch_priority.push_back(id);
+            touch_points[id].second.start(); // Start a timer for the new touch point
         }
-        touch_points[id] = point;
+        touch_points[id].first = point; // Update the position
+        removeStaleTouches(1500);
     }
 
     void removeTouch(int id) {
-#ifdef __EMSCRIPTEN__ // if its webassembly
+#ifdef __EMSCRIPTEN__ // if it's WebAssembly
         if (id == 0) {
             return;
         }
@@ -50,6 +50,20 @@ public:
             prev_pinch_distance = 0;
         }
     }
+
+    void removeStaleTouches(qint64 maxAgeMs) {
+        // Iterate through all touch points and remove stale ones
+        for (auto it = touch_points.begin(); it != touch_points.end(); ) {
+            if (it->second.second.elapsed() > maxAgeMs) {
+                touch_priority.remove(it->first);
+                it = touch_points.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    bool wasPinching = false;
 
     bool isPinching() {
         return touch_priority.size() >= 2;
@@ -64,8 +78,8 @@ public:
         int first = *it;
         ++it;
         int second = *it;
-        QPointF first_point = touch_points[first];
-        QPointF second_point = touch_points[second];
+        QPointF first_point = touch_points[first].first;
+        QPointF second_point = touch_points[second].first;
 
         QLineF line {first_point, second_point};
 
@@ -99,10 +113,11 @@ public:
         int first = *it;
         ++it;
         int second = *it;
-        QPointF first_point = touch_points[first];
-        QPointF second_point = touch_points[second];
+        QPointF first_point = touch_points[first].first;
+        QPointF second_point = touch_points[second].first;
 
-        return {(first_point.rx() + second_point.rx())/2, (first_point.ry() + second_point.ry())/2};
+        return {(first_point.rx() + second_point.rx()) / 2,
+            (first_point.ry() + second_point.ry()) / 2};
     }
 
     void setPrevCenterPoint(QPointF point) {
@@ -111,7 +126,7 @@ public:
 
     QPointF getRelativeCenter() {
         QPointF current_center = getPinchCenterPoint();
-        QPointF relative_center = current_center-prev_pinch_center_point;
+        QPointF relative_center = current_center - prev_pinch_center_point;
         prev_pinch_center_point = current_center;
         return relative_center;
     }
@@ -119,6 +134,10 @@ public:
 private:
     QPointF prev_pinch_center_point;
     double prev_pinch_distance = 0;
-    std::map<int, QPointF> touch_points;
+
+           // Map of touch ID to pair of QPointF (position) and QElapsedTimer (timestamp)
+    std::map<int, std::pair<QPointF, QElapsedTimer>> touch_points;
+
+           // List to maintain touch order priority
     std::list<int> touch_priority;
 };

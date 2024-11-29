@@ -11,11 +11,12 @@
 #include "hosts.hpp"
 
 // Embedded JavaScript function using EM_JS
-EM_JS(void, open_file_and_process, (const char* room_id_c, const char* previous_page_id_c, const char* nw_host_c), {
+EM_JS(void, open_file_and_process, (const char* room_id_c, const char* previous_page_id_c, const char* nw_host_c, const char* password_c), {
     // Create a hidden file input
     const nw_host = UTF8ToString(nw_host_c);
     const room_id = UTF8ToString(room_id_c);
     const previous_page_id = UTF8ToString(previous_page_id_c);
+    const password = UTF8ToString(password_c);
 
     const input = document.createElement("input");
     input.type = "file";
@@ -37,11 +38,20 @@ EM_JS(void, open_file_and_process, (const char* room_id_c, const char* previous_
             // Log file data in JavaScript
             console.log("File read as byte array:", byteArray);
 
+            var headers;
+            if (password == "") {
+                headers = {
+                    "Content-Type": "application/octet-stream",
+                };
+            } else {
+                headers = {
+                    "Content-Type": "application/octet-stream",
+                    "Authorization": `Bearer ${password}`
+                };
+            }
             fetch(`${nw_host}/v1/rooms/${room_id}/pdf_insert?previous_page_id=${previous_page_id}`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/octet-stream"
-                },
+                headers: headers,
                 body: byteArray // Send the byte array as the request body
             })
             .then(response => {

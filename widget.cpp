@@ -7,6 +7,7 @@
 #include <QRegularExpressionValidator> // For QRegularExpressionValidator
 #include "newuser.h"
 #include <QKeyEvent>
+#include <qtimer.h>
 
 
 
@@ -35,7 +36,7 @@ Widget::Widget(QWidget *parent)
     ui->newpage->setCursor(Qt::PointingHandCursor);
     ui->codeEnter->setCursor(Qt::PointingHandCursor);
     ui->changename->setCursor(Qt::PointingHandCursor);
-    ui->getfile->setCursor(Qt::PointingHandCursor);
+    // ui->getfile->setCursor(Qt::PointingHandCursor);
 
     lineEdits = {ui->lineEdit_5, ui->lineEdit_6, ui->lineEdit_7, ui->lineEdit_8, ui->lineEdit_9};
 
@@ -46,9 +47,9 @@ Widget::Widget(QWidget *parent)
 
 
 
-    QIcon fileicon(":/svg/svg/upload_file_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg");
-    ui->getfile->setIcon(fileicon);
-    ui->getfile->setIconSize(QSize(120, 120));
+    // QIcon fileicon(":/svg/svg/upload_file_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg");
+    // ui->getfile->setIcon(fileicon);
+    // ui->getfile->setIconSize(QSize(120, 120));
 
     QIcon pageicon(":/svg/svg/add_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg");
     ui->newpage->setIcon(pageicon);
@@ -187,6 +188,9 @@ void Widget::setUsername(const QString& username) {
 
 void Widget::setErrorText(const QString& error) {
     ui->error->setText(error);
+    QTimer::singleShot(3000, this, [this]() {
+        ui->error->setText("");
+    });
 }
 
 

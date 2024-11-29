@@ -238,12 +238,20 @@ void ClientWebSocketHandler::handleEvent(const nlohmann::json& event)
             state.removeUser(event["username"]);
             break;
         }
+        case User::UserEventType::KICK: {
+            if (event["username"] == username) {
+                navigator->goToHomepage();
+                closeWebSocket();
+            }
+            break;
+        }
         default:
             state.manipulateUser(event["username"], [&](User& user) {
                 user.applyEvent(event);
             });
             break;
         }
+        emit usersUpdated();
         break;
     }
     case STROKE:

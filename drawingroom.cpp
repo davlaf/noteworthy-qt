@@ -70,6 +70,12 @@ drawingRoom::drawingRoom(QWidget* parent)
         this,
         &drawingRoom::handleDeletePageUIChange);
 
+    connect(
+        &ui->graphics->ws_handler,
+        &ClientWebSocketHandler::usersUpdated,
+        this,
+        &drawingRoom::handleUserUpdate);
+
     ui->collapse->setCursor(Qt::PointingHandCursor);
     ui->copyCode->setCursor(Qt::PointingHandCursor);
 
@@ -446,8 +452,12 @@ void drawingRoom::on_draw_clicked()
                              "border: none;"
                              "}");
 
-    ui->graphics->selection.selecting = false;
-    ui->graphics->selection.drag_box->hide();
+    if (!ui->graphics->selection.sel_list.empty()) {
+        ui->graphics->selection.hideSelBox();
+        ui->graphics->selection.sel_list.clear();
+        ui->graphics->selection.selecting = false;
+        ui->graphics->selection.drag_box->hide();
+    }
     ui->graphics->touch_state.current_touch_action = TouchState::APPEND_STROKE;
 }
 
@@ -464,8 +474,12 @@ void drawingRoom::on_erase_clicked()
                             "border: none;"
                             "}");
 
-    ui->graphics->selection.selecting = false;
-    ui->graphics->selection.drag_box->hide();
+    if (!ui->graphics->selection.sel_list.empty()) {
+        ui->graphics->selection.hideSelBox();
+        ui->graphics->selection.sel_list.clear();
+        ui->graphics->selection.selecting = false;
+        ui->graphics->selection.drag_box->hide();
+    }
     ui->graphics->touch_state.current_touch_action = TouchState::ERASE_STROKE;
 }
 
@@ -600,7 +614,6 @@ void clearLayout(QVBoxLayout* layout)
         delete item;
     }
 }
-
 void drawingRoom::initialize(std::string initial_room)
 {
     ui->graphics->setScene(&no_page_scene);
@@ -622,6 +635,23 @@ void drawingRoom::initialize(std::string initial_room)
     emit ui->graphics->ws_handler.startConnection(user_id, state.room_id);
     ui->code->setText(QString::fromStdString(state.room_id));
     setNameLabel(QString::fromStdString(state.owner_id + "'s Room"));
+
+    // if we dont show
+    if (user_id == state.owner_id) {
+        ui->changePasswordLabel->show();
+        ui->PasswordEdit->show();
+        ui->PasswordSetButton->show();
+        ui->KickButton->show();
+        ui->KickUsernameEdit->show();
+        ui->userKickLabel->show();
+    } else {
+        ui->changePasswordLabel->hide();
+        ui->PasswordEdit->hide();
+        ui->PasswordSetButton->hide();
+        ui->KickButton->hide();
+        ui->KickUsernameEdit->hide();
+        ui->userKickLabel->hide();
+    }
 
     uint64_t first_page_id;
     if (!state.getFirstPageId(first_page_id)) {
@@ -721,7 +751,9 @@ void drawingRoom::handleCreatePageUIChange(uint64_t page_id)
 
         connect(new_thumbnail.get(), &ClickableGraphicsView::clicked, this, [this, page_id]() { select_page(page_id); });
 
-        // select_page(page_id);
+        if (this->ui->graphics->current_page_id == 0) {
+            select_page(page_id);
+        }
     });
 };
 void drawingRoom::handleDeletePageUIChange(uint64_t page_id)
@@ -1081,7 +1113,7 @@ void drawingRoom::on_setting3_clicked()
 void drawingRoom::on_setting2_clicked()
 {
 #ifdef __EMSCRIPTEN__ // if its webassembly
-    open_file_and_process(state.room_id.c_str(), std::to_string(ui->graphics->current_page_id).c_str(), NW_HTTP.c_str());
+    open_file_and_process(state.room_id.c_str(), std::to_string(ui->graphics->current_page_id).c_str(), NW_HTTP.c_str(), state.password.c_str());
 #endif
 
     qDebug() << "function jover";
@@ -1090,5 +1122,53 @@ void drawingRoom::on_setting2_clicked()
 void drawingRoom::on_select_clicked()
 {
     ui->graphics->touch_state.current_touch_action = TouchState::DRAG_SELECTION;
+}
+
+void drawingRoom::handleUserUpdate() {
+
+    std::vector<std::string> connected_users;
+    std::vector<std::string> disconnected_users;
+
+    state.forEachUser([&](const User &user){
+        if (user.is_connected) {
+            connected_users.push_back(user.username);
+        } else {
+            disconnected_users.push_back(user.username);
+        }
+    });
+
+    std::string output_string = "Connected Users:\n";
+    for (auto &username : connected_users) {
+        output_string += username + "\n";
+    }
+    output_string += "\nDisconnected Users:\n";
+    for (auto &username : disconnected_users) {
+        output_string += username + "\n";
+    }
+
+    ui->usersTextBrowser->setText(QString::fromStdString(output_string));
+}
+
+
+void drawingRoom::on_KickButton_clicked()
+{
+    nlohmann::json event;
+    if (!state.isUserConnectedToRoom(ui->KickUsernameEdit->text().toStdString())) {
+        return;
+    }
+
+    state.manipulateUser(ui->KickUsernameEdit->text().toStdString(), [&](User& user) {
+        user.createKickEvent(event);
+    });
+    ui->graphics->ws_handler.handleEvent(event);
+    ui->graphics->ws_handler.sendEvent(event);
+}
+
+void drawingRoom::on_PasswordSetButton_clicked()
+{
+    nlohmann::json event;
+    state.createChangePasswordEvent(event, ui->PasswordEdit->text().toStdString());
+    ui->graphics->ws_handler.handleEvent(event);
+    ui->graphics->ws_handler.sendEvent(event);
 }
 
