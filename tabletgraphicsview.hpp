@@ -2,6 +2,7 @@
 
 #include "ClientWebSocketHandler.hpp"
 #include "Stroke.hpp"
+#include "Selection.hpp"
 #include <QGraphicsView>
 #include <QWidget>
 #include <qgraphicsscene.h>
@@ -53,6 +54,7 @@ public:
     std::string user_id;
 
     TouchState touch_state;
+    Selection selection;
 private:
     void resizeEvent(QResizeEvent *event) override;
     void handleTouch(QPointF position, int id);

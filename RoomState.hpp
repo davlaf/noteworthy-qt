@@ -25,7 +25,7 @@ public:
     uint64_t getObjectIdFromGraphicsItem(QGraphicsItem* item)
     {
         if (pointer_to_id_map.count(item) == 0) {
-            return 0;
+            return -1;
         }
         return pointer_to_id_map.at(item);
     }
@@ -194,9 +194,9 @@ public:
             json.push_back(user_info);
         }
 
-               // then add create page event each page and add all the objects of that
-               // page add last page first, adding the next pages at position 0 so they
-               // are in order
+        // then add create page event each page and add all the objects of that
+        // page add last page first, adding the next pages at position 0 so they
+        // are in order
         forEachReverse([this, &json](Page& page) mutable {
             nlohmann::json create_page_json;
             page.createInsertPageEvent(create_page_json, 0);
@@ -305,7 +305,7 @@ public:
             return;
         }
 
-               // Insert page after previous page in the order
+        // Insert page after previous page in the order
         auto it = std::find(page_order.begin(), page_order.end(), previous_page_id);
         if (it == page_order.end()) {
             throw std::runtime_error("page to add after not found");
@@ -333,7 +333,7 @@ public:
         manipulator(*users.at(username)); // Pass to manipulator by reference
     }
 
-           // DANGEROUS!!!
+    // DANGEROUS!!!
     User* getUserPtr(const std::string& username)
     {
         std::lock_guard<std::mutex> lock(room_mutex);
@@ -444,7 +444,8 @@ public:
         }
     }
 
-    void createResetEvent(nlohmann::json &event) {
+    void createResetEvent(nlohmann::json& event)
+    {
         addMetaInformation(event);
         event["object_type"] = RESET;
     }
