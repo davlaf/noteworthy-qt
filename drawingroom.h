@@ -114,6 +114,8 @@ private slots:
 
     void on_setting2_clicked();
 
+    void on_select_clicked();
+
 private:
     Ui::drawingRoom *ui;
     int lastWidth = 0;

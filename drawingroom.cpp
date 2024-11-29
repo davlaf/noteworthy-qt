@@ -162,27 +162,27 @@ drawingRoom::drawingRoom(QWidget* parent)
     ui->select->setIcon(icon6);
     ui->select->setIconSize(QSize(23, 23)); // Set icon size if needed
 
-    // save button
-    ui->save->setMaximumSize(40, 40); // Set size to be a square
-    ui->save->setStyleSheet("QPushButton {"
-                            "background-color: rgba(174, 243, 163, 1);"
-                            "border-radius: 20px;" // Radius = half of the width/height
-                            "padding-left: 10px; padding-right: 10px;"
-                            "}");
-    QIcon icon7(":/svg/svg/save.svg"); // Path to your SVG file in the resources or filesystem
-    ui->save->setIcon(icon7);
-    ui->save->setIconSize(QSize(23, 23)); // Set icon size if needed
+    // // save button
+    // ui->save->setMaximumSize(40, 40); // Set size to be a square
+    // ui->save->setStyleSheet("QPushButton {"
+    //                         "background-color: rgba(174, 243, 163, 1);"
+    //                         "border-radius: 20px;" // Radius = half of the width/height
+    //                         "padding-left: 10px; padding-right: 10px;"
+    //                         "}");
+    // QIcon icon7(":/svg/svg/save.svg"); // Path to your SVG file in the resources or filesystem
+    // ui->save->setIcon(icon7);
+    // ui->save->setIconSize(QSize(23, 23)); // Set icon size if needed
 
-    // article button
-    ui->article->setMaximumSize(40, 40); // Set size to be a square
-    ui->article->setStyleSheet("QPushButton {"
-                               "background-color: rgba(174, 243, 163, 1);"
-                               "border-radius: 20px;" // Radius = half of the width/height
-                               "padding-left: 10px; padding-right: 10px;"
-                               "}");
-    QIcon icon8(":/svg/svg/article.svg"); // Path to your SVG file in the resources or filesystem
-    ui->article->setIcon(icon8);
-    ui->article->setIconSize(QSize(23, 23)); // Set icon size if needed
+    // // article button
+    // ui->article->setMaximumSize(40, 40); // Set size to be a square
+    // ui->article->setStyleSheet("QPushButton {"
+    //                            "background-color: rgba(174, 243, 163, 1);"
+    //                            "border-radius: 20px;" // Radius = half of the width/height
+    //                            "padding-left: 10px; padding-right: 10px;"
+    //                            "}");
+    // QIcon icon8(":/svg/svg/article.svg"); // Path to your SVG file in the resources or filesystem
+    // ui->article->setIcon(icon8);
+    // ui->article->setIconSize(QSize(23, 23)); // Set icon size if needed
 
     // copy code button
     ui->copyCode->setMaximumSize(40, 40); // Set size to be a square
@@ -446,6 +446,8 @@ void drawingRoom::on_draw_clicked()
                              "border: none;"
                              "}");
 
+    ui->graphics->selection.selecting = false;
+    ui->graphics->selection.drag_box->hide();
     ui->graphics->touch_state.current_touch_action = TouchState::APPEND_STROKE;
 }
 
@@ -462,6 +464,8 @@ void drawingRoom::on_erase_clicked()
                             "border: none;"
                             "}");
 
+    ui->graphics->selection.selecting = false;
+    ui->graphics->selection.drag_box->hide();
     ui->graphics->touch_state.current_touch_action = TouchState::ERASE_STROKE;
 }
 
@@ -1082,3 +1086,9 @@ void drawingRoom::on_setting2_clicked()
 
     qDebug() << "function jover";
 }
+
+void drawingRoom::on_select_clicked()
+{
+    ui->graphics->touch_state.current_touch_action = TouchState::DRAG_SELECTION;
+}
+

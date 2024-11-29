@@ -15,7 +15,7 @@ public:
         DRAG_SELECTION,
         DRAG_HANDLE,
     };
-    TouchAction current_touch_action = DRAG_SELECTION;
+    TouchAction current_touch_action = APPEND_STROKE;
 
     void print() {
         qDebug() << "TouchState:";

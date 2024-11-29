@@ -942,7 +942,7 @@ border-radius: 30px;</string>
 
 border-radius: 30px;</string>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,0,0,0,0,0,0,0,0,0">
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,0,0,0,0,0,0,0">
             <item>
              <widget class="QPushButton" name="leaveRoom">
               <property name="text">
@@ -981,13 +981,6 @@ border-radius: 30px;</string>
             </item>
             <item>
              <widget class="QPushButton" name="select">
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="article">
               <property name="text">
                <string/>
               </property>
@@ -1043,13 +1036,6 @@ border-radius: 20px;
                 </widget>
                </item>
               </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="save">
-              <property name="text">
-               <string/>
-              </property>
              </widget>
             </item>
             <item>
