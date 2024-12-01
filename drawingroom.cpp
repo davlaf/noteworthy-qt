@@ -653,6 +653,25 @@ void drawingRoom::initialize(std::string initial_room)
         ui->userKickLabel->hide();
     }
 
+    if (state.room_id == "12345") {
+        if (user_id == state.owner_id) {
+            ui->setting1->show();
+            ui->setting2->show();
+            ui->setting3->show();
+        } else {
+            ui->setting1->hide();
+            ui->setting2->hide();
+            ui->setting3->hide();
+        }
+    } else {
+        ui->setting1->show();
+        ui->setting2->show();
+        ui->setting3->show();
+    }
+
+    // go to the page view
+    on_pages_clicked();
+
     uint64_t first_page_id;
     if (!state.getFirstPageId(first_page_id)) {
         ui->graphics->current_page_id = 0;

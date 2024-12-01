@@ -194,7 +194,7 @@ void TabletGraphicsView::handleMove(QPointF position, int id)
             nlohmann::json event_json;
             state.manipulatePage(current_page_id, [&was_real_object, item, &event_json](Page& page){
                 uint64_t object_id = page.getObjectIdFromGraphicsItem(item);
-                if (object_id == 0) {
+                if (object_id == -1) {
                     return;
                 }
                 page.manipulateObject(object_id, [&event_json](CanvasObject& object){

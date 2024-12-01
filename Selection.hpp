@@ -331,14 +331,19 @@ public:
         qDebug() << "moving " << distance_y;
         for (std::list<uint64_t>::iterator it=sel_list.begin(); it != sel_list.end(); ++it)
         {
+            bool was_real = false;
             uint64_t move_id = *it;
-            state.manipulatePage(page_id, [move_id, &event_json, distance_x, distance_y](Page& page)
+            state.manipulatePage(page_id, [&was_real, move_id, &event_json, distance_x, distance_y](Page& page)
+            {
+                page.manipulateObject(move_id, [&was_real, &event_json, distance_x, distance_y](CanvasObject &object)
                 {
-                    page.manipulateObject(move_id, [&event_json, distance_x, distance_y](CanvasObject &object)
-                                          {
-                                              object.createMoveEvent(event_json, distance_x, distance_y);
-                                          });
+                    object.createMoveEvent(event_json, distance_x, distance_y);
+                    was_real = true;
                 });
+            });
+            if (!was_real) {
+                continue;
+            }
             qDebug() << "sending event";
             ws_handler.sendEvent(event_json);
             ws_handler.handleEvent(event_json);

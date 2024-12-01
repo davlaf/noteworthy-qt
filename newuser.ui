@@ -287,7 +287,7 @@ QLineEdit:focus {
        <widget class="QWidget" name="widget_5" native="true">
         <property name="maximumSize">
          <size>
-          <width>600</width>
+          <width>1000</width>
           <height>16777215</height>
          </size>
         </property>
@@ -302,7 +302,7 @@ QLineEdit:focus {
           <widget class="QLabel" name="error">
            <property name="maximumSize">
             <size>
-             <width>500</width>
+             <width>900</width>
              <height>30</height>
             </size>
            </property>
